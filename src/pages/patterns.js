@@ -5,24 +5,78 @@
 const PatternsPage = (function() {
   let currentSpeed = 1;
   let currentSentence = null;
+  let currentPattern = null;
   let isAutoPlay = false;
+  let currentDay = 1;
+  let availableDays = [];
 
   async function init() {
-    await loadPatterns();
+    await loadWeekData();
     setupEventListeners();
+    renderDaySelector();
+    await loadDay(1);
     renderPatternList();
     generateNewSentence();
   }
 
-  async function loadPatterns() {
-    const data = await DayLoader.loadDay(1);
+  async function loadWeekData() {
+    const weekData = await DayLoader.loadWeek1();
+    if (weekData && weekData.days) {
+      availableDays = weekData.days.map(d => ({
+        day: d.day,
+        title: d.title,
+        titleCn: d.titleCn,
+        titleEn: d.titleEn
+      }));
+    }
+    renderDaySelector();
+  }
+
+  async function loadDay(dayNumber) {
+    const data = await DayLoader.loadDay(dayNumber);
     if (data && data.patterns) {
       PatternEngine.loadPatterns(data.patterns);
+      currentDay = dayNumber;
+      updateDayTitle();
+      renderPatternList();
+      generateNewSentence();
     }
   }
 
+  function updateDayTitle() {
+    const titleEl = document.getElementById('patternsDayTitle');
+    if (titleEl && availableDays.length > 0) {
+      const dayInfo = availableDays.find(d => d.day === currentDay);
+      if (dayInfo) {
+        titleEl.textContent = `${I18n.t('day')} ${currentDay}: ${dayInfo.titleCn || dayInfo.title}`;
+      }
+    }
+  }
+
+  function renderDaySelector() {
+    const container = document.getElementById('patternsDaySelector');
+    if (!container) return;
+
+    container.innerHTML = availableDays.map(day => {
+      const isActive = day.day === currentDay;
+      const isUnlocked = DayLoader.isDayUnlocked(day.day);
+      return `
+        <button class="day-btn ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}"
+                onclick="PatternsPage.selectDay(${day.day})"
+                ${!isUnlocked ? 'disabled' : ''}>
+          ${I18n.t('day')} ${day.day}
+        </button>
+      `;
+    }).join('');
+  }
+
+  function selectDay(dayNumber) {
+    if (!DayLoader.isDayUnlocked(dayNumber)) return;
+    loadDay(dayNumber);
+    renderDaySelector();
+  }
+
   function setupEventListeners() {
-    // Speed slider
     const speedSlider = document.getElementById('patternSpeedSlider');
     const speedValue = document.getElementById('patternSpeedValue');
     if (speedSlider) {
@@ -33,19 +87,16 @@ const PatternsPage = (function() {
       });
     }
 
-    // Generate button
     const generateBtn = document.getElementById('generateSentenceBtn');
     if (generateBtn) {
       generateBtn.addEventListener('click', generateNewSentence);
     }
 
-    // Play button
     const playBtn = document.getElementById('playSentenceBtn');
     if (playBtn) {
       playBtn.addEventListener('click', playCurrentSentence);
     }
 
-    // Auto-play toggle
     const autoPlayBtn = document.getElementById('autoPlayBtn');
     if (autoPlayBtn) {
       autoPlayBtn.addEventListener('click', toggleAutoPlay);
@@ -57,22 +108,24 @@ const PatternsPage = (function() {
     if (!container) return;
 
     const patterns = PatternEngine.getAllPatterns();
+    if (patterns.length === 0) {
+      container.innerHTML = '<div class="empty-state">📝 No patterns loaded. Please select a day.</div>';
+      return;
+    }
+
     container.innerHTML = patterns.map((pattern, index) => `
-      <div class="pattern-item" data-index="${index}" onclick="PatternsPage.selectPattern(${index})">
+      <div class="pattern-item ${index === PatternEngine.getCurrentPatternIndex() ? 'active' : ''}" 
+           data-index="${index}" 
+           onclick="PatternsPage.selectPattern(${index})">
         <div class="pattern-template">${pattern.template}</div>
-        <div class="pattern-desc">${pattern.description}</div>
+        <div class="pattern-desc">${pattern.description || pattern.descriptionCn || ''}</div>
       </div>
     `).join('');
   }
 
   function selectPattern(index) {
     PatternEngine.selectPattern(index);
-    
-    // Update active state in UI
-    document.querySelectorAll('.pattern-item').forEach((item, i) => {
-      item.classList.toggle('active', i === index);
-    });
-    
+    renderPatternList();
     generateNewSentence();
   }
 
@@ -81,26 +134,24 @@ const PatternsPage = (function() {
     if (!result) return;
 
     currentSentence = result.sentence;
+    currentPattern = result.template;
     
-    // Update display
     const sentenceDisplay = document.getElementById('sentenceDisplay');
     const templateDisplay = document.getElementById('templateDisplay');
     
     if (sentenceDisplay) {
       sentenceDisplay.textContent = currentSentence;
       sentenceDisplay.classList.remove('fade-in');
-      void sentenceDisplay.offsetWidth; // Trigger reflow
+      void sentenceDisplay.offsetWidth;
       sentenceDisplay.classList.add('fade-in');
     }
     
     if (templateDisplay) {
-      templateDisplay.textContent = `模板: ${result.template}`;
+      templateDisplay.textContent = `模板: ${currentPattern}`;
     }
 
-    // Track progress
     Storage.incrementPatternsPracticed();
 
-    // Auto-play if enabled
     if (isAutoPlay) {
       setTimeout(() => playCurrentSentence(), 500);
     }
@@ -108,7 +159,6 @@ const PatternsPage = (function() {
 
   function playCurrentSentence() {
     if (!currentSentence) return;
-    
     Speech.speak(currentSentence, currentSpeed);
   }
 
@@ -122,6 +172,7 @@ const PatternsPage = (function() {
   }
 
   function refresh() {
+    renderDaySelector();
     renderPatternList();
     if (!currentSentence) {
       generateNewSentence();
@@ -132,6 +183,7 @@ const PatternsPage = (function() {
     init,
     refresh,
     selectPattern,
+    selectDay,
     generateNewSentence,
     playCurrentSentence
   };

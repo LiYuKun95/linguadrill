@@ -65,7 +65,8 @@ const I18n = (function() {
       'common.retry': '重试',
       'common.cancel': '取消',
       'common.confirm': '确认',
-      'common.close': '关闭'
+      'common.close': '关闭',
+      'common.day': '天'
     },
     en: {
       // Navigation
@@ -126,7 +127,8 @@ const I18n = (function() {
       'common.retry': 'Retry',
       'common.cancel': 'Cancel',
       'common.confirm': 'Confirm',
-      'common.close': 'Close'
+      'common.close': 'Close',
+      'common.day': 'Day'
     }
   };
 

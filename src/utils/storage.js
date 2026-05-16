@@ -13,7 +13,9 @@ const Storage = (function() {
       shadowingCompleted: 0,
       totalWords: 0,
       totalPatterns: 0,
-      totalShadowing: 0
+      totalShadowing: 0,
+      completedDays: [],
+      currentStreak: 0
     };
   }
 

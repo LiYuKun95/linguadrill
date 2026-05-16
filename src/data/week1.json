@@ -1,0 +1,567 @@
+{
+  "week": 1,
+  "title": "Week 1 - Basic Communication",
+  "titleCn": "第一周 - 基础交流",
+  "description": "A0 beginner level English focusing on essential daily communication phrases and high-frequency vocabulary",
+  "descriptionCn": "A0入门级英语，专注于日常交流短语和高频词汇",
+  "days": [
+    {
+      "day": 1,
+      "title": "Greetings & Introductions",
+      "titleCn": "问候与介绍",
+      "focus": "Basic greetings and introducing yourself",
+      "focusCn": "基本问候和自我介绍",
+      "words": [
+        {"word": "hello", "phonetic": "/həˈloʊ/", "translation": "你好", "example": "Hello, how are you?", "exampleCn": "你好，你好吗？"},
+        {"word": "hi", "phonetic": "/haɪ/", "translation": "嗨", "example": "Hi there!", "exampleCn": "嗨，你好！"},
+        {"word": "good", "phonetic": "/ɡʊd/", "translation": "好的", "example": "Good morning!", "exampleCn": "早上好！"},
+        {"word": "morning", "phonetic": "/ˈmɔːrnɪŋ/", "translation": "早晨", "example": "Good morning!", "exampleCn": "早上好！"},
+        {"word": "afternoon", "phonetic": "/ˌæftərˈnuːn/", "translation": "下午", "example": "Good afternoon!", "exampleCn": "下午好！"},
+        {"word": "evening", "phonetic": "/ˈiːvnɪŋ/", "translation": "晚上", "example": "Good evening!", "exampleCn": "晚上好！"},
+        {"word": "thank", "phonetic": "/θæŋk/", "translation": "感谢", "example": "Thank you!", "exampleCn": "谢谢你！"},
+        {"word": "you", "phonetic": "/juː/", "translation": "你/你们", "example": "How are you?", "exampleCn": "你好吗？"},
+        {"word": "I", "phonetic": "/aɪ/", "translation": "我", "example": "I am happy.", "exampleCn": "我很开心。"},
+        {"word": "am", "phonetic": "/æm/", "translation": "是", "example": "I am a student.", "exampleCn": "我是一名学生。"}
+      ],
+      "patterns": [
+        {
+          "template": "{greeting}, {name}!",
+          "description": "问候语",
+          "descriptionEn": "Greetings",
+          "placeholders": {
+            "greeting": ["Hello", "Hi", "Hey"],
+            "name": ["John", "Mary", "Tom", "friend", "there"]
+          }
+        },
+        {
+          "template": "Good {time}!",
+          "description": "时间问候",
+          "descriptionEn": "Time-based greeting",
+          "placeholders": {
+            "time": ["morning", "afternoon", "evening", "night"]
+          }
+        },
+        {
+          "template": "How are you?",
+          "description": "询问近况",
+          "descriptionEn": "Asking how someone is",
+          "placeholders": {}
+        },
+        {
+          "template": "I am {feeling}.",
+          "description": "表达感受",
+          "descriptionEn": "Expressing feelings",
+          "placeholders": {
+            "feeling": ["happy", "good", "fine", "great", "okay"]
+          }
+        },
+        {
+          "template": "Nice to meet you.",
+          "description": "很高兴认识你",
+          "descriptionEn": "Pleasure to meet you",
+          "placeholders": {}
+        }
+      ],
+      "shadowing": [
+        {"id": 1, "sentence": "Hello, how are you?", "translation": "你好，你好吗？", "difficulty": "easy"},
+        {"id": 2, "sentence": "Good morning!", "translation": "早上好！", "difficulty": "easy"},
+        {"id": 3, "sentence": "Good afternoon!", "translation": "下午好！", "difficulty": "easy"},
+        {"id": 4, "sentence": "Good evening!", "translation": "晚上好！", "difficulty": "easy"},
+        {"id": 5, "sentence": "I am fine, thank you.", "translation": "我很好，谢谢你。", "difficulty": "easy"},
+        {"id": 6, "sentence": "Nice to meet you.", "translation": "很高兴认识你。", "difficulty": "easy"},
+        {"id": 7, "sentence": "How was your day?", "translation": "你今天过得怎么样？", "difficulty": "easy"},
+        {"id": 8, "sentence": "I am happy to see you.", "translation": "很高兴见到你。", "difficulty": "easy"}
+      ],
+      "speakingPrompts": [
+        {"prompt": "Introduce yourself to someone new", "translation": "向新人介绍自己"},
+        {"prompt": "Greet your friend in the morning", "translation": "早上问候朋友"},
+        {"prompt": "Ask someone how they are doing", "translation": "询问某人近况"}
+      ]
+    },
+    {
+      "day": 2,
+      "title": "Basic Questions",
+      "titleCn": "基础疑问词",
+      "focus": "Essential question words and simple Q&A",
+      "focusCn": "基本疑问词和简单问答",
+      "words": [
+        {"word": "what", "phonetic": "/wʌt/", "translation": "什么", "example": "What is your name?", "exampleCn": "你叫什么名字？"},
+        {"word": "who", "phonetic": "/huː/", "translation": "谁", "example": "Who is that?", "exampleCn": "那是谁？"},
+        {"word": "where", "phonetic": "/wer/", "translation": "哪里", "example": "Where are you?", "exampleCn": "你在哪里？"},
+        {"word": "when", "phonetic": "/wen/", "translation": "什么时候", "example": "When is the meeting?", "exampleCn": "会议是什么时候？"},
+        {"word": "why", "phonetic": "/waɪ/", "translation": "为什么", "example": "Why are you here?", "exampleCn": "你为什么在这里？"},
+        {"word": "how", "phonetic": "/haʊ/", "translation": "如何", "example": "How are you?", "exampleCn": "你好吗？"},
+        {"word": "name", "phonetic": "/neɪm/", "translation": "名字", "example": "My name is Tom.", "exampleCn": "我叫汤姆。"},
+        {"word": "from", "phonetic": "/frʌm/", "translation": "来自", "example": "I am from China.", "exampleCn": "我来自中国。"},
+        {"word": "your", "phonetic": "/jɔːr/", "translation": "你的", "example": "What is your name?", "exampleCn": "你叫什么名字？"},
+        {"word": "my", "phonetic": "/maɪ/", "translation": "我的", "example": "My name is Mary.", "exampleCn": "我叫玛丽。"}
+      ],
+      "patterns": [
+        {
+          "template": "What is your {topic}?",
+          "description": "询问你的...",
+          "descriptionEn": "Asking about someone's...",
+          "placeholders": {
+            "topic": ["name", "email", "phone number", "address"]
+          }
+        },
+        {
+          "template": "Where are you from?",
+          "description": "你来自哪里？",
+          "descriptionEn": "Where do you come from?",
+          "placeholders": {}
+        },
+        {
+          "template": "When is {event}?",
+          "description": "...是什么时候？",
+          "descriptionEn": "When is...?",
+          "placeholders": {
+            "event": ["the party", "the class", "dinner", "the meeting"]
+          }
+        },
+        {
+          "template": "How much is {item}?",
+          "description": "...多少钱？",
+          "descriptionEn": "How much does it cost?",
+          "placeholders": {
+            "item": ["this", "that", "the coffee", "the book"]
+          }
+        },
+        {
+          "template": "Who is {person}?",
+          "description": "谁是...？",
+          "descriptionEn": "Who is...?",
+          "placeholders": {
+            "person": ["he", "she", "your friend", "that man"]
+          }
+        }
+      ],
+      "shadowing": [
+        {"id": 1, "sentence": "What is your name?", "translation": "你叫什么名字？", "difficulty": "easy"},
+        {"id": 2, "sentence": "Where are you from?", "translation": "你来自哪里？", "difficulty": "easy"},
+        {"id": 3, "sentence": "When is the meeting?", "translation": "会议是什么时候？", "difficulty": "easy"},
+        {"id": 4, "sentence": "Who is that woman?", "translation": "那位女士是谁？", "difficulty": "easy"},
+        {"id": 5, "sentence": "How old are you?", "translation": "你多大了？", "difficulty": "easy"},
+        {"id": 6, "sentence": "What time is it?", "translation": "现在几点？", "difficulty": "easy"},
+        {"id": 7, "sentence": "Where do you live?", "translation": "你住在哪里？", "difficulty": "medium"},
+        {"id": 8, "sentence": "Why are you late?", "translation": "你为什么迟到？", "difficulty": "medium"}
+      ],
+      "speakingPrompts": [
+        {"prompt": "Ask a new friend about their name and origin", "translation": "问新朋友关于他们的名字和来自哪里"},
+        {"prompt": "Ask for the time", "translation": "询问时间"},
+        {"prompt": "Ask the price of something", "translation": "询问某物的价格"}
+      ]
+    },
+    {
+      "day": 3,
+      "title": "Daily Activities",
+      "titleCn": "日常活动",
+      "focus": "Talking about everyday activities",
+      "focusCn": "谈论日常活动",
+      "words": [
+        {"word": "eat", "phonetic": "/iːt/", "translation": "吃", "example": "I eat breakfast.", "exampleCn": "我吃早餐。"},
+        {"word": "drink", "phonetic": "/drɪŋk/", "translation": "喝", "example": "I drink water.", "exampleCn": "我喝水。"},
+        {"word": "sleep", "phonetic": "/sliːp/", "translation": "睡觉", "example": "I sleep at 10.", "exampleCn": "我10点睡觉。"},
+        {"word": "work", "phonetic": "/wɜːrk/", "translation": "工作", "example": "I work at home.", "exampleCn": "我在家工作。"},
+        {"word": "study", "phonetic": "/ˈstʌdi/", "translation": "学习", "example": "I study English.", "exampleCn": "我学英语。"},
+        {"word": "go", "phonetic": "/ɡoʊ/", "translation": "去", "example": "I go to school.", "exampleCn": "我去学校。"},
+        {"word": "come", "phonetic": "/kʌm/", "translation": "来", "example": "I come home late.", "exampleCn": "我很晚回家。"},
+        {"word": "home", "phonetic": "/hoʊm/", "translation": "家", "example": "I am home.", "exampleCn": "我在家。"},
+        {"word": "school", "phonetic": "/skuːl/", "translation": "学校", "example": "I go to school.", "exampleCn": "我去学校。"},
+        {"word": "time", "phonetic": "/taɪm/", "translation": "时间", "example": "What time is it?", "exampleCn": "现在几点？"}
+      ],
+      "patterns": [
+        {
+          "template": "I {verb} every day.",
+          "description": "我每天...",
+          "descriptionEn": "I ... every day",
+          "placeholders": {
+            "verb": ["work", "study", "exercise", "read", "walk"]
+          }
+        },
+        {
+          "template": "I {verb} in the {time}.",
+          "description": "我在...做...",
+          "descriptionEn": "I ... in the ...",
+          "placeholders": {
+            "verb": ["eat", "sleep", "work", "relax"],
+            "time": ["morning", "afternoon", "evening", "night"]
+          }
+        },
+        {
+          "template": "I go to {place}.",
+          "description": "我去...",
+          "descriptionEn": "I go to ...",
+          "placeholders": {
+            "place": ["school", "work", "the gym", "the store", "the park"]
+          }
+        },
+        {
+          "template": "Do you {verb}?",
+          "description": "你...吗？",
+          "descriptionEn": "Do you ...?",
+          "placeholders": {
+            "verb": ["like coffee", "work here", "know him", "play sports"]
+          }
+        },
+        {
+          "template": "What do you do?",
+          "description": "你是做什么的？",
+          "descriptionEn": "What is your job?",
+          "placeholders": {}
+        }
+      ],
+      "shadowing": [
+        {"id": 1, "sentence": "I eat breakfast at 7 AM.", "translation": "我早上7点吃早餐。", "difficulty": "easy"},
+        {"id": 2, "sentence": "I go to work every morning.", "translation": "我每天早上去上班。", "difficulty": "easy"},
+        {"id": 3, "sentence": "I study English at night.", "translation": "我晚上学英语。", "difficulty": "easy"},
+        {"id": 4, "sentence": "What do you do every day?", "translation": "你每天做什么？", "difficulty": "easy"},
+        {"id": 5, "sentence": "I sleep eight hours.", "translation": "我睡八个小时。", "difficulty": "medium"},
+        {"id": 6, "sentence": "When do you go home?", "translation": "你什么时候回家？", "difficulty": "medium"},
+        {"id": 7, "sentence": "I come from a small town.", "translation": "我来自一个小镇。", "difficulty": "medium"},
+        {"id": 8, "sentence": "Do you exercise every day?", "translation": "你每天都锻炼吗？", "difficulty": "medium"}
+      ],
+      "speakingPrompts": [
+        {"prompt": "Describe your daily routine", "translation": "描述你的日常作息"},
+        {"prompt": "Tell someone about your morning", "translation": "告诉某人你的早晨"},
+        {"prompt": "Ask a friend about their day", "translation": "问朋友关于他们的一天"}
+      ]
+    },
+    {
+      "day": 4,
+      "title": "At Home & Family",
+      "titleCn": "家庭与住所",
+      "focus": "Family members and home environment",
+      "focusCn": "家庭成员和家庭环境",
+      "words": [
+        {"word": "family", "phonetic": "/ˈfæməli/", "translation": "家庭", "example": "My family is big.", "exampleCn": "我的家庭很大。"},
+        {"word": "mother", "phonetic": "/ˈmʌðər/", "translation": "妈妈", "example": "My mother is kind.", "exampleCn": "我妈妈很善良。"},
+        {"word": "father", "phonetic": "/ˈfɑːðər/", "translation": "爸爸", "example": "My father works hard.", "exampleCn": "我爸爸工作很努力。"},
+        {"word": "brother", "phonetic": "/ˈbrʌðər/", "translation": "兄弟", "example": "I have a brother.", "exampleCn": "我有一个兄弟。"},
+        {"word": "sister", "phonetic": "/ˈsɪstər/", "translation": "姐妹", "example": "My sister is tall.", "exampleCn": "我姐姐很高。"},
+        {"word": "house", "phonetic": "/haʊs/", "translation": "房子", "example": "My house is big.", "exampleCn": "我的房子很大。"},
+        {"word": "room", "phonetic": "/ruːm/", "translation": "房间", "example": "This is my room.", "exampleCn": "这是我的房间。"},
+        {"word": "live", "phonetic": "/lɪv/", "translation": "住", "example": "I live in Beijing.", "exampleCn": "我住在北京。"},
+        {"word": "with", "phonetic": "/wɪð/", "translation": "和...一起", "example": "I live with my family.", "exampleCn": "我和家人住在一起。"},
+        {"word": "have", "phonetic": "/hæv/", "translation": "有", "example": "I have two cats.", "exampleCn": "我有两只猫。"}
+      ],
+      "patterns": [
+        {
+          "template": "I live with my {family_member}.",
+          "description": "我和...住在一起",
+          "descriptionEn": "I live with my ...",
+          "placeholders": {
+            "family_member": ["family", "mother", "father", "sister", "brother"]
+          }
+        },
+        {
+          "template": "My {family_member} is {adjective}.",
+          "description": "我的...很...",
+          "descriptionEn": "My ... is ...",
+          "placeholders": {
+            "family_member": ["mother", "father", "sister", "brother", "dog"],
+            "adjective": ["kind", "nice", "funny", "smart", "tall"]
+          }
+        },
+        {
+          "template": "There are {number} rooms.",
+          "description": "有...个房间",
+          "descriptionEn": "There are ... rooms",
+          "placeholders": {
+            "number": ["two", "three", "four", "five", "six"]
+          }
+        },
+        {
+          "template": "I have {item}.",
+          "description": "我有...",
+          "descriptionEn": "I have ...",
+          "placeholders": {
+            "item": ["a cat", "a dog", "two brothers", "a big house", "a small car"]
+          }
+        },
+        {
+          "template": "This is my {room}.",
+          "description": "这是我的...",
+          "descriptionEn": "This is my ...",
+          "placeholders": {
+            "room": ["bedroom", "kitchen", "bathroom", "living room", "garden"]
+          }
+        }
+      ],
+      "shadowing": [
+        {"id": 1, "sentence": "I live with my family.", "translation": "我和家人住在一起。", "difficulty": "easy"},
+        {"id": 2, "sentence": "My mother is very kind.", "translation": "我妈妈非常善良。", "difficulty": "easy"},
+        {"id": 3, "sentence": "I have two brothers.", "translation": "我有两个兄弟。", "difficulty": "easy"},
+        {"id": 4, "sentence": "This is my bedroom.", "translation": "这是我的卧室。", "difficulty": "easy"},
+        {"id": 5, "sentence": "My house has three rooms.", "translation": "我的房子有三个房间。", "difficulty": "medium"},
+        {"id": 6, "sentence": "Where do you live?", "translation": "你住在哪里？", "difficulty": "medium"},
+        {"id": 7, "sentence": "I live in a big city.", "translation": "我住在一个大城市。", "difficulty": "medium"},
+        {"id": 8, "sentence": "My sister is a student.", "translation": "我姐姐是一名学生。", "difficulty": "medium"}
+      ],
+      "speakingPrompts": [
+        {"prompt": "Describe your family", "translation": "描述你的家庭"},
+        {"prompt": "Describe your home", "translation": "描述你的家"},
+        {"prompt": "Tell someone about a family member", "translation": "告诉某人关于一个家庭成员"}
+      ]
+    },
+    {
+      "day": 5,
+      "title": "Food & Drink",
+      "titleCn": "饮食",
+      "focus": "Ordering food and expressing preferences",
+      "focusCn": "点餐和表达喜好",
+      "words": [
+        {"word": "food", "phonetic": "/fuːd/", "translation": "食物", "example": "The food is good.", "exampleCn": "这个食物很好吃。"},
+        {"word": "water", "phonetic": "/ˈwɔːtər/", "translation": "水", "example": "I want water.", "exampleCn": "我想要水。"},
+        {"word": "coffee", "phonetic": "/ˈkɔːfi/", "translation": "咖啡", "example": "I drink coffee.", "exampleCn": "我喝咖啡。"},
+        {"word": "tea", "phonetic": "/tiː/", "translation": "茶", "example": "I like tea.", "exampleCn": "我喜欢茶。"},
+        {"word": "breakfast", "phonetic": "/ˈbrekfəst/", "translation": "早餐", "example": "I eat breakfast.", "exampleCn": "我吃早餐。"},
+        {"word": "lunch", "phonetic": "/lʌntʃ/", "translation": "午餐", "example": "Let's have lunch.", "exampleCn": "我们吃午餐吧。"},
+        {"word": "dinner", "phonetic": "/ˈdɪnər/", "translation": "晚餐", "example": "Dinner is ready.", "exampleCn": "晚餐准备好了。"},
+        {"word": "like", "phonetic": "/laɪk/", "translation": "喜欢", "example": "I like pizza.", "exampleCn": "我喜欢披萨。"},
+        {"word": "want", "phonetic": "/wɑːnt/", "translation": "想要", "example": "I want coffee.", "exampleCn": "我想要咖啡。"},
+        {"word": "eat", "phonetic": "/iːt/", "translation": "吃", "example": "Let's eat!", "exampleCn": "我们吃吧！"}
+      ],
+      "patterns": [
+        {
+          "template": "I like {food}.",
+          "description": "我喜欢...",
+          "descriptionEn": "I like ...",
+          "placeholders": {
+            "food": ["pizza", "rice", "noodles", "chicken", "fish"]
+          }
+        },
+        {
+          "template": "I want {drink}, please.",
+          "description": "请给我...",
+          "descriptionEn": "I would like ...",
+          "placeholders": {
+            "drink": ["water", "coffee", "tea", "juice", "milk"]
+          }
+        },
+        {
+          "template": "What do you like to eat?",
+          "description": "你喜欢吃什么？",
+          "descriptionEn": "What do you like to eat?",
+          "placeholders": {}
+        },
+        {
+          "template": "{meal} is at {time}.",
+          "description": "...在...点",
+          "descriptionEn": "... is at ...",
+          "placeholders": {
+            "meal": ["Breakfast", "Lunch", "Dinner"],
+            "time": ["7", "12", "6", "8", "9"]
+          }
+        },
+        {
+          "template": "The food is {adjective}.",
+          "description": "这个食物很...",
+          "descriptionEn": "The food is ...",
+          "placeholders": {
+            "adjective": ["delicious", "good", "spicy", "sweet", "fresh"]
+          }
+        }
+      ],
+      "shadowing": [
+        {"id": 1, "sentence": "I like coffee in the morning.", "translation": "我喜欢早上喝咖啡。", "difficulty": "easy"},
+        {"id": 2, "sentence": "I want some water, please.", "translation": "请给我一些水。", "difficulty": "easy"},
+        {"id": 3, "sentence": "What do you like to eat?", "translation": "你喜欢吃什么？", "difficulty": "easy"},
+        {"id": 4, "sentence": "Dinner is at 6 PM.", "translation": "晚餐是下午6点。", "difficulty": "easy"},
+        {"id": 5, "sentence": "The food is very delicious.", "translation": "这个食物非常美味。", "difficulty": "medium"},
+        {"id": 6, "sentence": "I usually have breakfast at 7.", "translation": "我通常7点吃早餐。", "difficulty": "medium"},
+        {"id": 7, "sentence": "Do you prefer tea or coffee?", "translation": "你喜欢茶还是咖啡？", "difficulty": "medium"},
+        {"id": 8, "sentence": "Let's have dinner together.", "translation": "我们一起吃晚饭吧。", "difficulty": "medium"}
+      ],
+      "speakingPrompts": [
+        {"prompt": "Order food at a restaurant", "translation": "在餐厅点餐"},
+        {"prompt": "Describe what you eat for breakfast", "translation": "描述你早餐吃什么"},
+        {"prompt": "Ask someone about their favorite food", "translation": "问某人他们最喜欢的食物"}
+      ]
+    },
+    {
+      "day": 6,
+      "title": "Shopping & Money",
+      "titleCn": "购物与金钱",
+      "focus": "Making purchases and discussing prices",
+      "focusCn": "购物和讨论价格",
+      "words": [
+        {"word": "buy", "phonetic": "/baɪ/", "translation": "买", "example": "I want to buy this.", "exampleCn": "我想买这个。"},
+        {"word": "cost", "phonetic": "/kɔːst/", "translation": "花费", "example": "How much does it cost?", "exampleCn": "这个多少钱？"},
+        {"word": "money", "phonetic": "/ˈmʌni/", "translation": "钱", "example": "I need money.", "exampleCn": "我需要钱。"},
+        {"word": "price", "phonetic": "/praɪs/", "translation": "价格", "example": "What is the price?", "exampleCn": "价格是多少？"},
+        {"word": "cheap", "phonetic": "/tʃiːp/", "translation": "便宜", "example": "This is cheap.", "exampleCn": "这个很便宜。"},
+        {"word": "expensive", "phonetic": "/ɪkˈspensɪv/", "translation": "贵", "example": "That is expensive.", "exampleCn": "那个很贵。"},
+        {"word": "store", "phonetic": "/stɔːr/", "translation": "商店", "example": "I go to the store.", "exampleCn": "我去商店。"},
+        {"word": "pay", "phonetic": "/peɪ/", "translation": "支付", "example": "I pay with cash.", "exampleCn": "我用现金支付。"},
+        {"word": "card", "phonetic": "/kɑːrd/", "translation": "卡", "example": "Credit card, please.", "exampleCn": "请用信用卡。"},
+        {"word": "dollar", "phonetic": "/ˈdɑːlər/", "translation": "美元", "example": "It costs 10 dollars.", "exampleCn": "这个10美元。"}
+      ],
+      "patterns": [
+        {
+          "template": "How much is {item}?",
+          "description": "...多少钱？",
+          "descriptionEn": "How much is ...?",
+          "placeholders": {
+            "item": ["this", "that", "the shirt", "the shoes", "the book"]
+          }
+        },
+        {
+          "template": "I want to buy {item}.",
+          "description": "我想买...",
+          "descriptionEn": "I want to buy ...",
+          "placeholders": {
+            "item": ["this", "that", "a new phone", "some clothes", "a gift"]
+          }
+        },
+        {
+          "template": "It is {price}.",
+          "description": "它是...",
+          "descriptionEn": "It is ...",
+          "placeholders": {
+            "price": ["five dollars", "ten dollars", "very cheap", "too expensive"]
+          }
+        },
+        {
+          "template": "Can I pay by {method}?",
+          "description": "我能用...支付吗？",
+          "descriptionEn": "Can I pay by ...?",
+          "placeholders": {
+            "method": ["card", "cash", "phone", "credit card"]
+          }
+        },
+        {
+          "template": "Do you have {item}?",
+          "description": "你有...吗？",
+          "descriptionEn": "Do you have ...?",
+          "placeholders": {
+            "item": ["this in blue", "a smaller size", "something cheaper", "it in red"]
+          }
+        }
+      ],
+      "shadowing": [
+        {"id": 1, "sentence": "How much is this?", "translation": "这个多少钱？", "difficulty": "easy"},
+        {"id": 2, "sentence": "I want to buy this.", "translation": "我想买这个。", "difficulty": "easy"},
+        {"id": 3, "sentence": "It is too expensive.", "translation": "这个太贵了。", "difficulty": "easy"},
+        {"id": 4, "sentence": "Can I pay by card?", "translation": "我能用卡支付吗？", "difficulty": "easy"},
+        {"id": 5, "sentence": "Do you have this in blue?", "translation": "这个有蓝色的吗？", "difficulty": "medium"},
+        {"id": 6, "sentence": "Where is the payment counter?", "translation": "收银台在哪里？", "difficulty": "medium"},
+        {"id": 7, "sentence": "I am just looking, thank you.", "translation": "我只是看看，谢谢。", "difficulty": "medium"},
+        {"id": 8, "sentence": "Can you give me a discount?", "translation": "能给我打折吗？", "difficulty": "medium"}
+      ],
+      "speakingPrompts": [
+        {"prompt": "Ask the price of something in a store", "translation": "在商店询问某物的价格"},
+        {"prompt": "Buy something and pay for it", "translation": "买某物并付款"},
+        {"prompt": "Compare prices of two items", "translation": "比较两件商品的价格"}
+      ]
+    },
+    {
+      "day": 7,
+      "title": "Review & Practice",
+      "titleCn": "复习与练习",
+      "focus": "Review all Week 1 content with mixed practice",
+      "focusCn": "复习第一周所有内容并进行综合练习",
+      "words": [
+        {"word": "review", "phonetic": "/rɪˈvjuː/", "translation": "复习", "example": "Time to review.", "exampleCn": "是时候复习了。"},
+        {"word": "practice", "phonetic": "/ˈpræktɪs/", "translation": "练习", "example": "I need practice.", "exampleCn": "我需要练习。"},
+        {"word": "learn", "phonetic": "/lɜːrn/", "translation": "学习", "example": "I learn every day.", "exampleCn": "我每天学习。"},
+        {"word": "speak", "phonetic": "/spiːk/", "translation": "说", "example": "I speak English.", "exampleCn": "我说英语。"},
+        {"word": "listen", "phonetic": "/ˈlɪsən/", "translation": "听", "example": "Listen to me.", "exampleCn": "听我说。"},
+        {"word": "read", "phonetic": "/riːd/", "translation": "读", "example": "I read books.", "exampleCn": "我读书。"},
+        {"word": "write", "phonetic": "/raɪt/", "translation": "写", "example": "I write a letter.", "exampleCn": "我写一封信。"},
+        {"word": "understand", "phonetic": "/ˌʌndərˈstænd/", "translation": "理解", "example": "I understand.", "exampleCn": "我明白了。"},
+        {"word": "remember", "phonetic": "/rɪˈmembər/", "translation": "记住", "example": "Remember this.", "exampleCn": "记住这个。"},
+        {"word": "again", "phonetic": "/əˈɡen/", "translation": "再次", "example": "Say it again.", "exampleCn": "再说一遍。"}
+      ],
+      "patterns": [
+        {
+          "template": "{greeting}! How are you?",
+          "description": "打招呼",
+          "descriptionEn": "Greeting someone",
+          "placeholders": {
+            "greeting": ["Hello", "Hi", "Good morning", "Good evening"]
+          }
+        },
+        {
+          "template": "I am {feeling}. And you?",
+          "description": "表达感受并询问",
+          "descriptionEn": "Express feelings and ask",
+          "placeholders": {
+            "feeling": ["happy", "tired", "busy", "excited", "fine"]
+          }
+        },
+        {
+          "template": "My name is {name}. I am from {country}.",
+          "description": "自我介绍",
+          "descriptionEn": "Self introduction",
+          "placeholders": {
+            "name": ["Tom", "Mary", "John", "Lisa", "David"],
+            "country": ["China", "Japan", "Korea", "the USA", "the UK"]
+          }
+        },
+        {
+          "template": "I {verb} {activity} every day.",
+          "description": "日常活动",
+          "descriptionEn": "Daily activities",
+          "placeholders": {
+            "verb": ["eat", "drink", "work", "study", "sleep"],
+            "activity": ["breakfast", "coffee", "hard", "English", "early"]
+          }
+        },
+        {
+          "template": "I live with my {family}. My house has {number} rooms.",
+          "description": "家庭介绍",
+          "descriptionEn": "Family description",
+          "placeholders": {
+            "family": ["family", "parents", "brother and sister", "mother", "father"],
+            "number": ["two", "three", "four", "five", "six"]
+          }
+        },
+        {
+          "template": "I like {food}. I want {drink}.",
+          "description": "饮食偏好",
+          "descriptionEn": "Food and drink preferences",
+          "placeholders": {
+            "food": ["pizza", "rice", "noodles", "chicken", "fish"],
+            "drink": ["water", "coffee", "tea", "juice", "milk"]
+          }
+        },
+        {
+          "template": "How much is {item}? It is {price}.",
+          "description": "询问和回答价格",
+          "descriptionEn": "Price Q&A",
+          "placeholders": {
+            "item": ["this", "that", "the shirt", "the shoes", "the book"],
+            "price": ["five dollars", "ten dollars", "very cheap", "too expensive"]
+          }
+        },
+        {
+          "template": "I {verb} English every day. I want to improve.",
+          "description": "学习英语",
+          "descriptionEn": "Learning English",
+          "placeholders": {
+            "verb": ["speak", "read", "write", "listen to", "study"]
+          }
+        }
+      ],
+      "shadowing": [
+        {"id": 1, "sentence": "Hello! How are you today?", "translation": "你好！你今天怎么样？", "difficulty": "easy"},
+        {"id": 2, "sentence": "My name is Tom. I am from the USA.", "translation": "我叫汤姆。我来自美国。", "difficulty": "easy"},
+        {"id": 3, "sentence": "I live in a big city with my family.", "translation": "我和家人住在一个大城市。", "difficulty": "medium"},
+        {"id": 4, "sentence": "I eat breakfast at 7 and dinner at 6.", "translation": "我7点吃早餐，6点吃晚餐。", "difficulty": "medium"},
+        {"id": 5, "sentence": "I like pizza. It is delicious.", "translation": "我喜欢披萨。它很美味。", "difficulty": "medium"},
+        {"id": 6, "sentence": "How much is this shirt? It is 20 dollars.", "translation": "这件衬衫多少钱？20美元。", "difficulty": "medium"},
+        {"id": 7, "sentence": "I speak English every day. I want to improve.", "translation": "我每天说英语。我想提高。", "difficulty": "medium"},
+        {"id": 8, "sentence": "Nice to meet you! Where are you from?", "translation": "很高兴认识你！你来自哪里？", "difficulty": "medium"},
+        {"id": 9, "sentence": "What time do you go to work?", "translation": "你什么时候去上班？", "difficulty": "medium"},
+        {"id": 10, "sentence": "I am learning English. It is fun!", "translation": "我在学英语。很有趣！", "difficulty": "medium"}
+      ],
+      "speakingPrompts": [
+        {"prompt": "Introduce yourself completely (name, origin, family, home)", "translation": "完整自我介绍（姓名、来源、家庭、住处）"},
+        {"prompt": "Order a complete meal at a restaurant", "translation": "在餐厅完整点餐"},
+        {"prompt": "Have a conversation about your daily routine", "translation": "进行关于日常生活的对话"},
+        {"prompt": "Shop for clothes and discuss prices", "translation": "买衣服并讨论价格"}
+      ]
+    }
+  ]
+}

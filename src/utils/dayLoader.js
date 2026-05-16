@@ -1,56 +1,57 @@
 /**
- * Day Loader - Dynamic content loader for daily learning data
- * Supports loading day1.json through day30.json
+ * Day Loader - Dynamic content loader for learning data
+ * Supports loading week1.json (full week) and individual days
  */
 const DayLoader = (function() {
+  let currentWeek = null;
   let currentDay = 1;
   let currentData = null;
   let loadingError = null;
 
-  /**
-   * Show error message to user in a page container
-   */
-  function showErrorMessage(containerId, message, retryCallback) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    container.innerHTML = `
-      <div class="loading-error">
-        <div class="error-icon">⚠️</div>
-        <div class="error-message">${message}</div>
-        <div class="error-hint">请确保使用 HTTP 服务器运行（而非直接打开文件）</div>
-        ${retryCallback ? `<button class="retry-btn" onclick="(${retryCallback.toString()})()">🔄 重试</button>` : ''}
-      </div>
-    `;
+  async function loadWeek1() {
+    loadingError = null;
+    try {
+      const response = await fetch('src/data/week1.json');
+      if (!response.ok) {
+        throw new Error(`Week 1 data not found (HTTP ${response.status})`);
+      }
+      currentWeek = await response.json();
+      return currentWeek;
+    } catch (error) {
+      console.error('Failed to load week 1:', error);
+      loadingError = error.message;
+      currentWeek = null;
+      return null;
+    }
   }
 
   async function loadDay(dayNumber) {
     loadingError = null;
+    if (!currentWeek) {
+      await loadWeek1();
+    }
+    
+    if (currentWeek && currentWeek.days) {
+      const dayData = currentWeek.days.find(d => d.day === dayNumber);
+      if (dayData) {
+        currentData = dayData;
+        currentDay = dayNumber;
+        return dayData;
+      }
+    }
     
     try {
       const response = await fetch(`src/data/day${dayNumber}.json`);
-      
       if (!response.ok) {
         throw new Error(`Day ${dayNumber} data not found (HTTP ${response.status})`);
       }
-      
       currentData = await response.json();
       currentDay = dayNumber;
-      loadingError = null;
       return currentData;
-      
     } catch (error) {
       console.error(`Failed to load day ${dayNumber}:`, error);
       loadingError = error.message;
       currentData = null;
-      
-      // Show user-friendly error message
-      let errorMessage = `加载 Day ${dayNumber} 数据失败`;
-      
-      if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
-        errorMessage = '无法加载数据：请使用 HTTP 服务器运行（Python: python -m http.server 或 VS Code Live Server）';
-      }
-      
       return null;
     }
   }
@@ -61,6 +62,10 @@ const DayLoader = (function() {
 
   function getCurrentData() {
     return currentData;
+  }
+
+  function getWeekData() {
+    return currentWeek;
   }
 
   function getWords() {
@@ -76,11 +81,28 @@ const DayLoader = (function() {
   }
 
   function getDayInfo() {
-    return currentData ? {
-      day: currentData.day,
-      title: currentData.title,
-      titleEn: currentData.titleEn
-    } : null;
+    if (currentData) {
+      return {
+        day: currentData.day,
+        title: currentData.title || currentData.titleCn,
+        titleCn: currentData.titleCn,
+        titleEn: currentData.titleEn || currentData.title,
+        focus: currentData.focus,
+        focusCn: currentData.focusCn
+      };
+    }
+    return null;
+  }
+
+  function getAvailableDays() {
+    if (currentWeek && currentWeek.days) {
+      return currentWeek.days.map(d => ({
+        day: d.day,
+        title: d.title,
+        titleCn: d.titleCn
+      }));
+    }
+    return [];
   }
 
   async function loadNextDay() {
@@ -100,15 +122,37 @@ const DayLoader = (function() {
     return null;
   }
 
+  function isDayUnlocked(dayNumber) {
+    if (dayNumber <= 1) return true;
+    const progress = Storage.getProgress();
+    return progress.completedDays && progress.completedDays.includes(dayNumber - 1);
+  }
+
+  function markDayCompleted(dayNumber) {
+    const progress = Storage.getProgress();
+    if (!progress.completedDays) {
+      progress.completedDays = [];
+    }
+    if (!progress.completedDays.includes(dayNumber)) {
+      progress.completedDays.push(dayNumber);
+      Storage.saveProgress(progress);
+    }
+  }
+
   return {
+    loadWeek1,
     loadDay,
     getCurrentDay,
     getCurrentData,
+    getWeekData,
     getWords,
     getPatterns,
     getShadowing,
     getDayInfo,
+    getAvailableDays,
     loadNextDay,
-    loadPreviousDay
+    loadPreviousDay,
+    isDayUnlocked,
+    markDayCompleted
   };
 })();

@@ -96,6 +96,10 @@ if (fs.existsSync('src/data/day1.json')) {
   fs.copyFileSync('src/data/day1.json', path.join(dataDir, 'day1.json'));
   console.log('  ✓ src/data/day1.json');
 }
+if (fs.existsSync('src/data/week1.json')) {
+  fs.copyFileSync('src/data/week1.json', path.join(dataDir, 'week1.json'));
+  console.log('  ✓ src/data/week1.json');
+}
 console.log('✅ 数据文件已复制\n');
 
 // 复制配置文件

@@ -68,7 +68,8 @@ const I18n = (function() {
       'common.retry': '重试',
       'common.cancel': '取消',
       'common.confirm': '确认',
-      'common.close': '关闭'
+      'common.close': '关闭',
+      'common.day': '天'
     },
     en: {
       // Navigation
@@ -129,7 +130,8 @@ const I18n = (function() {
       'common.retry': 'Retry',
       'common.cancel': 'Cancel',
       'common.confirm': 'Confirm',
-      'common.close': 'Close'
+      'common.close': 'Close',
+      'common.day': 'Day'
     }
   };
 
@@ -243,7 +245,9 @@ const Storage = (function() {
       shadowingCompleted: 0,
       totalWords: 0,
       totalPatterns: 0,
-      totalShadowing: 0
+      totalShadowing: 0,
+      completedDays: [],
+      currentStreak: 0
     };
   }
 
@@ -735,58 +739,59 @@ const Speech = (function() {
 
 /* === src/utils/dayLoader.js === */
 /**
- * Day Loader - Dynamic content loader for daily learning data
- * Supports loading day1.json through day30.json
+ * Day Loader - Dynamic content loader for learning data
+ * Supports loading week1.json (full week) and individual days
  */
 const DayLoader = (function() {
+  let currentWeek = null;
   let currentDay = 1;
   let currentData = null;
   let loadingError = null;
 
-  /**
-   * Show error message to user in a page container
-   */
-  function showErrorMessage(containerId, message, retryCallback) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    container.innerHTML = `
-      <div class="loading-error">
-        <div class="error-icon">⚠️</div>
-        <div class="error-message">${message}</div>
-        <div class="error-hint">请确保使用 HTTP 服务器运行（而非直接打开文件）</div>
-        ${retryCallback ? `<button class="retry-btn" onclick="(${retryCallback.toString()})()">🔄 重试</button>` : ''}
-      </div>
-    `;
+  async function loadWeek1() {
+    loadingError = null;
+    try {
+      const response = await fetch('src/data/week1.json');
+      if (!response.ok) {
+        throw new Error(`Week 1 data not found (HTTP ${response.status})`);
+      }
+      currentWeek = await response.json();
+      return currentWeek;
+    } catch (error) {
+      console.error('Failed to load week 1:', error);
+      loadingError = error.message;
+      currentWeek = null;
+      return null;
+    }
   }
 
   async function loadDay(dayNumber) {
     loadingError = null;
+    if (!currentWeek) {
+      await loadWeek1();
+    }
+    
+    if (currentWeek && currentWeek.days) {
+      const dayData = currentWeek.days.find(d => d.day === dayNumber);
+      if (dayData) {
+        currentData = dayData;
+        currentDay = dayNumber;
+        return dayData;
+      }
+    }
     
     try {
       const response = await fetch(`src/data/day${dayNumber}.json`);
-      
       if (!response.ok) {
         throw new Error(`Day ${dayNumber} data not found (HTTP ${response.status})`);
       }
-      
       currentData = await response.json();
       currentDay = dayNumber;
-      loadingError = null;
       return currentData;
-      
     } catch (error) {
       console.error(`Failed to load day ${dayNumber}:`, error);
       loadingError = error.message;
       currentData = null;
-      
-      // Show user-friendly error message
-      let errorMessage = `加载 Day ${dayNumber} 数据失败`;
-      
-      if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
-        errorMessage = '无法加载数据：请使用 HTTP 服务器运行（Python: python -m http.server 或 VS Code Live Server）';
-      }
-      
       return null;
     }
   }
@@ -797,6 +802,10 @@ const DayLoader = (function() {
 
   function getCurrentData() {
     return currentData;
+  }
+
+  function getWeekData() {
+    return currentWeek;
   }
 
   function getWords() {
@@ -812,11 +821,28 @@ const DayLoader = (function() {
   }
 
   function getDayInfo() {
-    return currentData ? {
-      day: currentData.day,
-      title: currentData.title,
-      titleEn: currentData.titleEn
-    } : null;
+    if (currentData) {
+      return {
+        day: currentData.day,
+        title: currentData.title || currentData.titleCn,
+        titleCn: currentData.titleCn,
+        titleEn: currentData.titleEn || currentData.title,
+        focus: currentData.focus,
+        focusCn: currentData.focusCn
+      };
+    }
+    return null;
+  }
+
+  function getAvailableDays() {
+    if (currentWeek && currentWeek.days) {
+      return currentWeek.days.map(d => ({
+        day: d.day,
+        title: d.title,
+        titleCn: d.titleCn
+      }));
+    }
+    return [];
   }
 
   async function loadNextDay() {
@@ -836,18 +862,41 @@ const DayLoader = (function() {
     return null;
   }
 
+  function isDayUnlocked(dayNumber) {
+    if (dayNumber <= 1) return true;
+    const progress = Storage.getProgress();
+    return progress.completedDays && progress.completedDays.includes(dayNumber - 1);
+  }
+
+  function markDayCompleted(dayNumber) {
+    const progress = Storage.getProgress();
+    if (!progress.completedDays) {
+      progress.completedDays = [];
+    }
+    if (!progress.completedDays.includes(dayNumber)) {
+      progress.completedDays.push(dayNumber);
+      Storage.saveProgress(progress);
+    }
+  }
+
   return {
+    loadWeek1,
     loadDay,
     getCurrentDay,
     getCurrentData,
+    getWeekData,
     getWords,
     getPatterns,
     getShadowing,
     getDayInfo,
+    getAvailableDays,
     loadNextDay,
-    loadPreviousDay
+    loadPreviousDay,
+    isDayUnlocked,
+    markDayCompleted
   };
 })();
+
 
 /* === src/utils/patternEngine.js === */
 /**
@@ -959,6 +1008,10 @@ const PatternEngine = (function() {
     return getCurrentPattern();
   }
 
+  function getCurrentPatternIndex() {
+    return currentPatternIndex;
+  }
+
   /**
    * Get pattern statistics
    */
@@ -974,6 +1027,7 @@ const PatternEngine = (function() {
     loadPatterns,
     getCurrentPattern,
     selectPattern,
+    getCurrentPatternIndex,
     getAllPatterns,
     generateSentence,
     generateMultipleSentences,
@@ -1128,26 +1182,79 @@ const HomePage = (function() {
 /* === src/pages/words.js === */
 /**
  * Vocabulary Training Module
- * Features: speech playback, adjustable speed, repeat mode, mark as learned
+ * Features: speech playback, day selection, adjustable speed, repeat mode, mark as learned
  */
 const WordsPage = (function() {
   let wordsData = [];
   let learnedWords = new Set();
   let currentSpeed = 1;
   let isRepeatMode = false;
+  let currentDay = 1;
+  let availableDays = [];
 
   async function init() {
-    await loadWords();
+    await loadWeekData();
     loadLearnedWords();
     setupEventListeners();
+    renderDaySelector();
+    await loadDay(1);
     renderWords();
   }
 
-  async function loadWords() {
-    const data = await DayLoader.loadDay(1);
-    if (data) {
-      wordsData = data.words;
+  async function loadWeekData() {
+    const weekData = await DayLoader.loadWeek1();
+    if (weekData && weekData.days) {
+      availableDays = weekData.days.map(d => ({
+        day: d.day,
+        title: d.title,
+        titleCn: d.titleCn,
+        titleEn: d.titleEn
+      }));
     }
+    renderDaySelector();
+  }
+
+  async function loadDay(dayNumber) {
+    const data = await DayLoader.loadDay(dayNumber);
+    if (data) {
+      wordsData = data.words || [];
+      currentDay = dayNumber;
+      updateDayTitle();
+      renderWords();
+    }
+  }
+
+  function updateDayTitle() {
+    const titleEl = document.getElementById('wordsDayTitle');
+    if (titleEl && availableDays.length > 0) {
+      const dayInfo = availableDays.find(d => d.day === currentDay);
+      if (dayInfo) {
+        titleEl.textContent = `${I18n.t('day')} ${currentDay}: ${dayInfo.titleCn || dayInfo.title}`;
+      }
+    }
+  }
+
+  function renderDaySelector() {
+    const container = document.getElementById('daySelector');
+    if (!container) return;
+
+    container.innerHTML = availableDays.map(day => {
+      const isActive = day.day === currentDay;
+      const isUnlocked = DayLoader.isDayUnlocked(day.day);
+      return `
+        <button class="day-btn ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}"
+                onclick="WordsPage.selectDay(${day.day})"
+                ${!isUnlocked ? 'disabled' : ''}>
+          ${I18n.t('day')} ${day.day}
+        </button>
+      `;
+    }).join('');
+  }
+
+  function selectDay(dayNumber) {
+    if (!DayLoader.isDayUnlocked(dayNumber)) return;
+    loadDay(dayNumber);
+    renderDaySelector();
   }
 
   function loadLearnedWords() {
@@ -1162,7 +1269,6 @@ const WordsPage = (function() {
   }
 
   function setupEventListeners() {
-    // Speed slider
     const speedSlider = document.getElementById('wordSpeedSlider');
     const speedValue = document.getElementById('wordSpeedValue');
     if (speedSlider) {
@@ -1173,7 +1279,6 @@ const WordsPage = (function() {
       });
     }
 
-    // Repeat mode toggle
     const repeatBtn = document.getElementById('repeatModeBtn');
     if (repeatBtn) {
       repeatBtn.addEventListener('click', () => {
@@ -1188,13 +1293,18 @@ const WordsPage = (function() {
     const container = document.getElementById('wordsList');
     if (!container) return;
 
+    if (wordsData.length === 0) {
+      container.innerHTML = '<div class="empty-state">📚 No words loaded. Please select a day.</div>';
+      return;
+    }
+
     container.innerHTML = wordsData.map((word, index) => {
-      const isLearned = learnedWords.has(word.word);
+      const isLearned = learnedWords.has(`${currentDay}_${word.word}`);
       return `
         <div class="word-card ${isLearned ? 'learned' : ''}" data-index="${index}">
           <div class="word-header">
             <div class="word-main">
-              <span class="word-text">${word.word}</span>
+              <span class="word-text" onclick="WordsPage.playWord(${index})">${word.word}</span>
               <span class="word-phonetic">${word.phonetic}</span>
             </div>
             <button class="word-audio-btn" onclick="WordsPage.playWord(${index})" aria-label="Play pronunciation">
@@ -1220,34 +1330,46 @@ const WordsPage = (function() {
     if (!word) return;
 
     if (isRepeatMode) {
-      // Play 3 times with small pause
       Speech.speak(word.word, currentSpeed);
-      setTimeout(() => {
-        Speech.speak(word.word, currentSpeed);
-      }, 1000);
-      setTimeout(() => {
-        Speech.speak(word.word, currentSpeed);
-      }, 2000);
+      setTimeout(() => Speech.speak(word.word, currentSpeed), 1000);
+      setTimeout(() => Speech.speak(word.word, currentSpeed), 2000);
     } else {
       Speech.speak(word.word, currentSpeed);
     }
 
-    // Track progress
     Storage.incrementWordsLearned();
   }
 
+  function playExample(index) {
+    const word = wordsData[index];
+    if (!word || !word.example) return;
+    Speech.speak(word.example, currentSpeed);
+  }
+
   function toggleLearned(word) {
-    if (learnedWords.has(word)) {
-      learnedWords.delete(word);
+    const key = `${currentDay}_${word}`;
+    if (learnedWords.has(key)) {
+      learnedWords.delete(key);
     } else {
-      learnedWords.add(word);
+      learnedWords.add(key);
     }
     saveLearnedWords();
     renderWords();
+    checkDayCompletion();
+  }
+
+  function checkDayCompletion() {
+    const dayWordsCount = wordsData.length;
+    const learnedToday = wordsData.filter(w => learnedWords.has(`${currentDay}_${w.word}`)).length;
+    
+    if (learnedToday >= dayWordsCount * 0.8) {
+      DayLoader.markDayCompleted(currentDay);
+    }
   }
 
   function refresh() {
     loadLearnedWords();
+    renderDaySelector();
     renderWords();
   }
 
@@ -1255,9 +1377,12 @@ const WordsPage = (function() {
     init,
     refresh,
     playWord,
-    toggleLearned
+    playExample,
+    toggleLearned,
+    selectDay
   };
 })();
+
 
 /* === src/pages/patterns.js === */
 /**
@@ -1267,24 +1392,78 @@ const WordsPage = (function() {
 const PatternsPage = (function() {
   let currentSpeed = 1;
   let currentSentence = null;
+  let currentPattern = null;
   let isAutoPlay = false;
+  let currentDay = 1;
+  let availableDays = [];
 
   async function init() {
-    await loadPatterns();
+    await loadWeekData();
     setupEventListeners();
+    renderDaySelector();
+    await loadDay(1);
     renderPatternList();
     generateNewSentence();
   }
 
-  async function loadPatterns() {
-    const data = await DayLoader.loadDay(1);
+  async function loadWeekData() {
+    const weekData = await DayLoader.loadWeek1();
+    if (weekData && weekData.days) {
+      availableDays = weekData.days.map(d => ({
+        day: d.day,
+        title: d.title,
+        titleCn: d.titleCn,
+        titleEn: d.titleEn
+      }));
+    }
+    renderDaySelector();
+  }
+
+  async function loadDay(dayNumber) {
+    const data = await DayLoader.loadDay(dayNumber);
     if (data && data.patterns) {
       PatternEngine.loadPatterns(data.patterns);
+      currentDay = dayNumber;
+      updateDayTitle();
+      renderPatternList();
+      generateNewSentence();
     }
   }
 
+  function updateDayTitle() {
+    const titleEl = document.getElementById('patternsDayTitle');
+    if (titleEl && availableDays.length > 0) {
+      const dayInfo = availableDays.find(d => d.day === currentDay);
+      if (dayInfo) {
+        titleEl.textContent = `${I18n.t('day')} ${currentDay}: ${dayInfo.titleCn || dayInfo.title}`;
+      }
+    }
+  }
+
+  function renderDaySelector() {
+    const container = document.getElementById('patternsDaySelector');
+    if (!container) return;
+
+    container.innerHTML = availableDays.map(day => {
+      const isActive = day.day === currentDay;
+      const isUnlocked = DayLoader.isDayUnlocked(day.day);
+      return `
+        <button class="day-btn ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}"
+                onclick="PatternsPage.selectDay(${day.day})"
+                ${!isUnlocked ? 'disabled' : ''}>
+          ${I18n.t('day')} ${day.day}
+        </button>
+      `;
+    }).join('');
+  }
+
+  function selectDay(dayNumber) {
+    if (!DayLoader.isDayUnlocked(dayNumber)) return;
+    loadDay(dayNumber);
+    renderDaySelector();
+  }
+
   function setupEventListeners() {
-    // Speed slider
     const speedSlider = document.getElementById('patternSpeedSlider');
     const speedValue = document.getElementById('patternSpeedValue');
     if (speedSlider) {
@@ -1295,19 +1474,16 @@ const PatternsPage = (function() {
       });
     }
 
-    // Generate button
     const generateBtn = document.getElementById('generateSentenceBtn');
     if (generateBtn) {
       generateBtn.addEventListener('click', generateNewSentence);
     }
 
-    // Play button
     const playBtn = document.getElementById('playSentenceBtn');
     if (playBtn) {
       playBtn.addEventListener('click', playCurrentSentence);
     }
 
-    // Auto-play toggle
     const autoPlayBtn = document.getElementById('autoPlayBtn');
     if (autoPlayBtn) {
       autoPlayBtn.addEventListener('click', toggleAutoPlay);
@@ -1319,22 +1495,24 @@ const PatternsPage = (function() {
     if (!container) return;
 
     const patterns = PatternEngine.getAllPatterns();
+    if (patterns.length === 0) {
+      container.innerHTML = '<div class="empty-state">📝 No patterns loaded. Please select a day.</div>';
+      return;
+    }
+
     container.innerHTML = patterns.map((pattern, index) => `
-      <div class="pattern-item" data-index="${index}" onclick="PatternsPage.selectPattern(${index})">
+      <div class="pattern-item ${index === PatternEngine.getCurrentPatternIndex() ? 'active' : ''}" 
+           data-index="${index}" 
+           onclick="PatternsPage.selectPattern(${index})">
         <div class="pattern-template">${pattern.template}</div>
-        <div class="pattern-desc">${pattern.description}</div>
+        <div class="pattern-desc">${pattern.description || pattern.descriptionCn || ''}</div>
       </div>
     `).join('');
   }
 
   function selectPattern(index) {
     PatternEngine.selectPattern(index);
-    
-    // Update active state in UI
-    document.querySelectorAll('.pattern-item').forEach((item, i) => {
-      item.classList.toggle('active', i === index);
-    });
-    
+    renderPatternList();
     generateNewSentence();
   }
 
@@ -1343,26 +1521,24 @@ const PatternsPage = (function() {
     if (!result) return;
 
     currentSentence = result.sentence;
+    currentPattern = result.template;
     
-    // Update display
     const sentenceDisplay = document.getElementById('sentenceDisplay');
     const templateDisplay = document.getElementById('templateDisplay');
     
     if (sentenceDisplay) {
       sentenceDisplay.textContent = currentSentence;
       sentenceDisplay.classList.remove('fade-in');
-      void sentenceDisplay.offsetWidth; // Trigger reflow
+      void sentenceDisplay.offsetWidth;
       sentenceDisplay.classList.add('fade-in');
     }
     
     if (templateDisplay) {
-      templateDisplay.textContent = `模板: ${result.template}`;
+      templateDisplay.textContent = `模板: ${currentPattern}`;
     }
 
-    // Track progress
     Storage.incrementPatternsPracticed();
 
-    // Auto-play if enabled
     if (isAutoPlay) {
       setTimeout(() => playCurrentSentence(), 500);
     }
@@ -1370,7 +1546,6 @@ const PatternsPage = (function() {
 
   function playCurrentSentence() {
     if (!currentSentence) return;
-    
     Speech.speak(currentSentence, currentSpeed);
   }
 
@@ -1384,6 +1559,7 @@ const PatternsPage = (function() {
   }
 
   function refresh() {
+    renderDaySelector();
     renderPatternList();
     if (!currentSentence) {
       generateNewSentence();
@@ -1394,10 +1570,12 @@ const PatternsPage = (function() {
     init,
     refresh,
     selectPattern,
+    selectDay,
     generateNewSentence,
     playCurrentSentence
   };
 })();
+
 
 /* === src/pages/shadowing.js === */
 /**
@@ -1410,23 +1588,92 @@ const ShadowingPage = (function() {
   let currentSpeed = 1;
   let isPlaying = false;
   let isPausedForUser = false;
+  let currentDay = 1;
+  let availableDays = [];
+  let completedShadowing = new Set();
 
   async function init() {
-    await loadData();
+    await loadWeekData();
+    loadCompletedShadowing();
     setupEventListeners();
+    renderDaySelector();
+    await loadDay(1);
     renderSentenceList();
     renderPlayer();
   }
 
-  async function loadData() {
-    const data = await DayLoader.loadDay(1);
+  async function loadWeekData() {
+    const weekData = await DayLoader.loadWeek1();
+    if (weekData && weekData.days) {
+      availableDays = weekData.days.map(d => ({
+        day: d.day,
+        title: d.title,
+        titleCn: d.titleCn,
+        titleEn: d.titleEn
+      }));
+    }
+    renderDaySelector();
+  }
+
+  async function loadDay(dayNumber) {
+    const data = await DayLoader.loadDay(dayNumber);
     if (data && data.shadowing) {
       shadowingData = data.shadowing;
+      currentDay = dayNumber;
+      currentIndex = 0;
+      isPausedForUser = false;
+      isPlaying = false;
+      updateDayTitle();
+      renderSentenceList();
+      renderPlayer();
     }
   }
 
+  function updateDayTitle() {
+    const titleEl = document.getElementById('shadowingDayTitle');
+    if (titleEl && availableDays.length > 0) {
+      const dayInfo = availableDays.find(d => d.day === currentDay);
+      if (dayInfo) {
+        titleEl.textContent = `${I18n.t('day')} ${currentDay}: ${dayInfo.titleCn || dayInfo.title}`;
+      }
+    }
+  }
+
+  function renderDaySelector() {
+    const container = document.getElementById('shadowingDaySelector');
+    if (!container) return;
+
+    container.innerHTML = availableDays.map(day => {
+      const isActive = day.day === currentDay;
+      const isUnlocked = DayLoader.isDayUnlocked(day.day);
+      return `
+        <button class="day-btn ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}"
+                onclick="ShadowingPage.selectDay(${day.day})"
+                ${!isUnlocked ? 'disabled' : ''}>
+          ${I18n.t('day')} ${day.day}
+        </button>
+      `;
+    }).join('');
+  }
+
+  function selectDay(dayNumber) {
+    if (!DayLoader.isDayUnlocked(dayNumber)) return;
+    loadDay(dayNumber);
+    renderDaySelector();
+  }
+
+  function loadCompletedShadowing() {
+    const saved = localStorage.getItem('linguadrill_completed_shadowing');
+    if (saved) {
+      completedShadowing = new Set(JSON.parse(saved));
+    }
+  }
+
+  function saveCompletedShadowing() {
+    localStorage.setItem('linguadrill_completed_shadowing', JSON.stringify([...completedShadowing]));
+  }
+
   function setupEventListeners() {
-    // Speed slider
     const speedSlider = document.getElementById('shadowingSpeedSlider');
     const speedValue = document.getElementById('shadowingSpeedValue');
     if (speedSlider) {
@@ -1437,7 +1684,6 @@ const ShadowingPage = (function() {
       });
     }
 
-    // Control buttons
     const playBtn = document.getElementById('shadowingPlayBtn');
     const replayBtn = document.getElementById('shadowingReplayBtn');
     const nextBtn = document.getElementById('shadowingNextBtn');
@@ -1453,20 +1699,29 @@ const ShadowingPage = (function() {
     const container = document.getElementById('shadowingList');
     if (!container) return;
 
-    container.innerHTML = shadowingData.map((item, index) => `
-      <div class="shadowing-item ${index === currentIndex ? 'active' : ''}" 
-           data-index="${index}" 
-           onclick="ShadowingPage.selectSentence(${index})">
-        <div class="shadowing-number">${index + 1}</div>
-        <div class="shadowing-content">
-          <div class="shadowing-sentence">${item.sentence}</div>
-          <div class="shadowing-translation">${item.translation}</div>
+    if (shadowingData.length === 0) {
+      container.innerHTML = '<div class="empty-state">🎧 No sentences loaded. Please select a day.</div>';
+      return;
+    }
+
+    container.innerHTML = shadowingData.map((item, index) => {
+      const key = `${currentDay}_${item.id}`;
+      const isCompleted = completedShadowing.has(key);
+      return `
+        <div class="shadowing-item ${index === currentIndex ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
+             data-index="${index}" 
+             onclick="ShadowingPage.selectSentence(${index})">
+          <div class="shadowing-number">${index + 1}</div>
+          <div class="shadowing-content">
+            <div class="shadowing-sentence">${item.sentence}</div>
+            <div class="shadowing-translation">${item.translation}</div>
+          </div>
+          <div class="shadowing-status">
+            ${isCompleted ? '✅' : item.difficulty === 'easy' ? '🟢' : '🟡'}
+          </div>
         </div>
-        <div class="shadowing-difficulty ${item.difficulty}">
-          ${item.difficulty === 'easy' ? '简单' : '中等'}
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   function renderPlayer() {
@@ -1494,7 +1749,6 @@ const ShadowingPage = (function() {
       progressDisplay.textContent = `${currentIndex + 1} / ${shadowingData.length}`;
     }
 
-    // Update active state in list
     document.querySelectorAll('.shadowing-item').forEach((item, i) => {
       item.classList.toggle('active', i === currentIndex);
     });
@@ -1506,6 +1760,7 @@ const ShadowingPage = (function() {
       isPausedForUser = false;
       isPlaying = false;
       renderPlayer();
+      renderSentenceList();
     }
   }
 
@@ -1517,20 +1772,38 @@ const ShadowingPage = (function() {
     isPausedForUser = false;
     renderPlayer();
 
-    // Calculate duration based on sentence length and speed
     const duration = (currentItem.sentence.length * 80) / currentSpeed;
 
     Speech.speak(currentItem.sentence, currentSpeed);
 
-    // Show "Your Turn" after playback
     setTimeout(() => {
       isPausedForUser = true;
       isPlaying = false;
       renderPlayer();
+      markCurrentCompleted();
     }, duration);
 
-    // Track progress
     Storage.incrementShadowingCompleted();
+  }
+
+  function markCurrentCompleted() {
+    const currentItem = shadowingData[currentIndex];
+    if (currentItem) {
+      const key = `${currentDay}_${currentItem.id}`;
+      completedShadowing.add(key);
+      saveCompletedShadowing();
+      renderSentenceList();
+      checkDayCompletion();
+    }
+  }
+
+  function checkDayCompletion() {
+    const dayShadowingCount = shadowingData.length;
+    const completedToday = shadowingData.filter(s => completedShadowing.has(`${currentDay}_${s.id}`)).length;
+    
+    if (completedToday >= dayShadowingCount * 0.8) {
+      DayLoader.markDayCompleted(currentDay);
+    }
   }
 
   function replayCurrent() {
@@ -1544,7 +1817,7 @@ const ShadowingPage = (function() {
       isPausedForUser = false;
       isPlaying = false;
       renderPlayer();
-      // Auto-play next sentence
+      renderSentenceList();
       setTimeout(() => playCurrent(), 300);
     }
   }
@@ -1555,10 +1828,13 @@ const ShadowingPage = (function() {
       isPausedForUser = false;
       isPlaying = false;
       renderPlayer();
+      renderSentenceList();
     }
   }
 
   function refresh() {
+    loadCompletedShadowing();
+    renderDaySelector();
     renderSentenceList();
     renderPlayer();
   }
@@ -1567,12 +1843,14 @@ const ShadowingPage = (function() {
     init,
     refresh,
     selectSentence,
+    selectDay,
     playCurrent,
     replayCurrent,
     nextSentence,
     prevSentence
   };
 })();
+
 
 /* === src/pages/progress.js === */
 /**
@@ -1778,34 +2056,23 @@ const App = (function() {
   let currentPage = 'home';
 
   function init() {
-    // Initialize utilities first
     initUtilities();
-    
-    // Initialize navigation
     Navigation.init();
-    
-    // Initialize all pages
     initPages();
-    
-    // Setup global event listeners
     setupEventListeners();
-    
-    // Apply initial translations
     I18n.translatePage();
-    
     console.log('🎯 LinguaDrill initialized successfully!');
   }
 
   function initUtilities() {
-    // Set initial speech rate from storage
     const settings = Storage.getSettings();
     if (settings.speechRate) {
       Speech.setRate(settings.speechRate);
     }
+    DayLoader.loadWeek1();
   }
 
   function initPages() {
-    // Initialize each page module
     if (typeof HomePage !== 'undefined') {
       HomePage.init();
     }
@@ -1824,13 +2091,11 @@ const App = (function() {
   }
 
   function setupEventListeners() {
-    // Language toggle
     const langToggle = document.getElementById('langToggle');
     if (langToggle) {
       langToggle.addEventListener('click', toggleLanguage);
     }
 
-    // Start button on home page
     const startBtn = document.getElementById('startBtn');
     if (startBtn) {
       startBtn.addEventListener('click', () => {
@@ -1838,26 +2103,30 @@ const App = (function() {
       });
     }
 
-    // Listen for page changes
+    const continueBtn = document.getElementById('continueBtn');
+    if (continueBtn) {
+      continueBtn.addEventListener('click', () => {
+        Navigation.navigateTo('words');
+      });
+    }
+
     window.addEventListener('pageChange', (e) => {
       currentPage = e.detail.page;
       onPageChange(currentPage);
     });
 
-    // Listen for language changes
     window.addEventListener('languageChange', () => {
       I18n.translatePage();
       updateLangToggle();
+      refreshCurrentPage();
     });
 
-    // Handle visibility change (pause speech when tab hidden)
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         Speech.pause();
       }
     });
 
-    // Prevent zoom on double tap for mobile
     let lastTouchEnd = 0;
     document.addEventListener('touchend', (e) => {
       const now = Date.now();
@@ -1883,16 +2152,41 @@ const App = (function() {
     }
   }
 
+  function refreshCurrentPage() {
+    switch(currentPage) {
+      case 'words':
+        if (typeof WordsPage !== 'undefined') WordsPage.refresh();
+        break;
+      case 'patterns':
+        if (typeof PatternsPage !== 'undefined') PatternsPage.refresh();
+        break;
+      case 'shadowing':
+        if (typeof ShadowingPage !== 'undefined') ShadowingPage.refresh();
+        break;
+      case 'progress':
+        if (typeof ProgressPage !== 'undefined') ProgressPage.refresh();
+        break;
+    }
+  }
+
   function onPageChange(page) {
-    // Save current page to storage
     localStorage.setItem('linguadrill_last_page', page);
     
-    // Refresh progress page when navigated to
-    if (page === 'progress' && typeof ProgressPage !== 'undefined') {
-      ProgressPage.refresh();
+    switch(page) {
+      case 'words':
+        if (typeof WordsPage !== 'undefined') WordsPage.refresh();
+        break;
+      case 'patterns':
+        if (typeof PatternsPage !== 'undefined') PatternsPage.refresh();
+        break;
+      case 'shadowing':
+        if (typeof ShadowingPage !== 'undefined') ShadowingPage.refresh();
+        break;
+      case 'progress':
+        if (typeof ProgressPage !== 'undefined') ProgressPage.refresh();
+        break;
     }
 
-    // Track study session
     Storage.updateStreak();
   }
 
@@ -1900,7 +2194,6 @@ const App = (function() {
     return currentPage;
   }
 
-  // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
@@ -1911,4 +2204,5 @@ const App = (function() {
     getCurrentPage
   };
 })();
+
 

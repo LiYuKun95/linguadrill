@@ -8,23 +8,92 @@ const ShadowingPage = (function() {
   let currentSpeed = 1;
   let isPlaying = false;
   let isPausedForUser = false;
+  let currentDay = 1;
+  let availableDays = [];
+  let completedShadowing = new Set();
 
   async function init() {
-    await loadData();
+    await loadWeekData();
+    loadCompletedShadowing();
     setupEventListeners();
+    renderDaySelector();
+    await loadDay(1);
     renderSentenceList();
     renderPlayer();
   }
 
-  async function loadData() {
-    const data = await DayLoader.loadDay(1);
+  async function loadWeekData() {
+    const weekData = await DayLoader.loadWeek1();
+    if (weekData && weekData.days) {
+      availableDays = weekData.days.map(d => ({
+        day: d.day,
+        title: d.title,
+        titleCn: d.titleCn,
+        titleEn: d.titleEn
+      }));
+    }
+    renderDaySelector();
+  }
+
+  async function loadDay(dayNumber) {
+    const data = await DayLoader.loadDay(dayNumber);
     if (data && data.shadowing) {
       shadowingData = data.shadowing;
+      currentDay = dayNumber;
+      currentIndex = 0;
+      isPausedForUser = false;
+      isPlaying = false;
+      updateDayTitle();
+      renderSentenceList();
+      renderPlayer();
     }
   }
 
+  function updateDayTitle() {
+    const titleEl = document.getElementById('shadowingDayTitle');
+    if (titleEl && availableDays.length > 0) {
+      const dayInfo = availableDays.find(d => d.day === currentDay);
+      if (dayInfo) {
+        titleEl.textContent = `${I18n.t('day')} ${currentDay}: ${dayInfo.titleCn || dayInfo.title}`;
+      }
+    }
+  }
+
+  function renderDaySelector() {
+    const container = document.getElementById('shadowingDaySelector');
+    if (!container) return;
+
+    container.innerHTML = availableDays.map(day => {
+      const isActive = day.day === currentDay;
+      const isUnlocked = DayLoader.isDayUnlocked(day.day);
+      return `
+        <button class="day-btn ${isActive ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}"
+                onclick="ShadowingPage.selectDay(${day.day})"
+                ${!isUnlocked ? 'disabled' : ''}>
+          ${I18n.t('day')} ${day.day}
+        </button>
+      `;
+    }).join('');
+  }
+
+  function selectDay(dayNumber) {
+    if (!DayLoader.isDayUnlocked(dayNumber)) return;
+    loadDay(dayNumber);
+    renderDaySelector();
+  }
+
+  function loadCompletedShadowing() {
+    const saved = localStorage.getItem('linguadrill_completed_shadowing');
+    if (saved) {
+      completedShadowing = new Set(JSON.parse(saved));
+    }
+  }
+
+  function saveCompletedShadowing() {
+    localStorage.setItem('linguadrill_completed_shadowing', JSON.stringify([...completedShadowing]));
+  }
+
   function setupEventListeners() {
-    // Speed slider
     const speedSlider = document.getElementById('shadowingSpeedSlider');
     const speedValue = document.getElementById('shadowingSpeedValue');
     if (speedSlider) {
@@ -35,7 +104,6 @@ const ShadowingPage = (function() {
       });
     }
 
-    // Control buttons
     const playBtn = document.getElementById('shadowingPlayBtn');
     const replayBtn = document.getElementById('shadowingReplayBtn');
     const nextBtn = document.getElementById('shadowingNextBtn');
@@ -51,20 +119,29 @@ const ShadowingPage = (function() {
     const container = document.getElementById('shadowingList');
     if (!container) return;
 
-    container.innerHTML = shadowingData.map((item, index) => `
-      <div class="shadowing-item ${index === currentIndex ? 'active' : ''}" 
-           data-index="${index}" 
-           onclick="ShadowingPage.selectSentence(${index})">
-        <div class="shadowing-number">${index + 1}</div>
-        <div class="shadowing-content">
-          <div class="shadowing-sentence">${item.sentence}</div>
-          <div class="shadowing-translation">${item.translation}</div>
+    if (shadowingData.length === 0) {
+      container.innerHTML = '<div class="empty-state">🎧 No sentences loaded. Please select a day.</div>';
+      return;
+    }
+
+    container.innerHTML = shadowingData.map((item, index) => {
+      const key = `${currentDay}_${item.id}`;
+      const isCompleted = completedShadowing.has(key);
+      return `
+        <div class="shadowing-item ${index === currentIndex ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
+             data-index="${index}" 
+             onclick="ShadowingPage.selectSentence(${index})">
+          <div class="shadowing-number">${index + 1}</div>
+          <div class="shadowing-content">
+            <div class="shadowing-sentence">${item.sentence}</div>
+            <div class="shadowing-translation">${item.translation}</div>
+          </div>
+          <div class="shadowing-status">
+            ${isCompleted ? '✅' : item.difficulty === 'easy' ? '🟢' : '🟡'}
+          </div>
         </div>
-        <div class="shadowing-difficulty ${item.difficulty}">
-          ${item.difficulty === 'easy' ? '简单' : '中等'}
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   function renderPlayer() {
@@ -92,7 +169,6 @@ const ShadowingPage = (function() {
       progressDisplay.textContent = `${currentIndex + 1} / ${shadowingData.length}`;
     }
 
-    // Update active state in list
     document.querySelectorAll('.shadowing-item').forEach((item, i) => {
       item.classList.toggle('active', i === currentIndex);
     });
@@ -104,6 +180,7 @@ const ShadowingPage = (function() {
       isPausedForUser = false;
       isPlaying = false;
       renderPlayer();
+      renderSentenceList();
     }
   }
 
@@ -115,20 +192,38 @@ const ShadowingPage = (function() {
     isPausedForUser = false;
     renderPlayer();
 
-    // Calculate duration based on sentence length and speed
     const duration = (currentItem.sentence.length * 80) / currentSpeed;
 
     Speech.speak(currentItem.sentence, currentSpeed);
 
-    // Show "Your Turn" after playback
     setTimeout(() => {
       isPausedForUser = true;
       isPlaying = false;
       renderPlayer();
+      markCurrentCompleted();
     }, duration);
 
-    // Track progress
     Storage.incrementShadowingCompleted();
+  }
+
+  function markCurrentCompleted() {
+    const currentItem = shadowingData[currentIndex];
+    if (currentItem) {
+      const key = `${currentDay}_${currentItem.id}`;
+      completedShadowing.add(key);
+      saveCompletedShadowing();
+      renderSentenceList();
+      checkDayCompletion();
+    }
+  }
+
+  function checkDayCompletion() {
+    const dayShadowingCount = shadowingData.length;
+    const completedToday = shadowingData.filter(s => completedShadowing.has(`${currentDay}_${s.id}`)).length;
+    
+    if (completedToday >= dayShadowingCount * 0.8) {
+      DayLoader.markDayCompleted(currentDay);
+    }
   }
 
   function replayCurrent() {
@@ -142,7 +237,7 @@ const ShadowingPage = (function() {
       isPausedForUser = false;
       isPlaying = false;
       renderPlayer();
-      // Auto-play next sentence
+      renderSentenceList();
       setTimeout(() => playCurrent(), 300);
     }
   }
@@ -153,10 +248,13 @@ const ShadowingPage = (function() {
       isPausedForUser = false;
       isPlaying = false;
       renderPlayer();
+      renderSentenceList();
     }
   }
 
   function refresh() {
+    loadCompletedShadowing();
+    renderDaySelector();
     renderSentenceList();
     renderPlayer();
   }
@@ -165,6 +263,7 @@ const ShadowingPage = (function() {
     init,
     refresh,
     selectSentence,
+    selectDay,
     playCurrent,
     replayCurrent,
     nextSentence,

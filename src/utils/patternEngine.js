@@ -107,6 +107,10 @@ const PatternEngine = (function() {
     return getCurrentPattern();
   }
 
+  function getCurrentPatternIndex() {
+    return currentPatternIndex;
+  }
+
   /**
    * Get pattern statistics
    */
@@ -122,6 +126,7 @@ const PatternEngine = (function() {
     loadPatterns,
     getCurrentPattern,
     selectPattern,
+    getCurrentPatternIndex,
     getAllPatterns,
     generateSentence,
     generateMultipleSentences,
