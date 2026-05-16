@@ -1,7 +1,0 @@
-# Cloudflare Pages Configuration
-# This configures the build and deploy process
-
-[build]
-  # No build step needed - static site
-  command = ""
-  publish = "."
