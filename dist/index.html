@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4F46E5">
+  <meta name="description" content="LinguaDrill - 高效英语学习引擎，基于高频词汇、句型操练和跟读训练">
+  <title>LinguaDrill - English Learning Engine</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  
+  
+  
+  
+  
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="brand-icon">📚</span>
+      <span class="brand-name">LinguaDrill</span>
+    </div>
+    <button class="lang-toggle" id="langToggle" aria-label="切换语言">
+      <span>English</span>
+    </button>
+  </header>
+
+  <!-- Main Content -->
+  <main id="mainContent">
+    <!-- Home Page -->
+    <section id="home" class="page active">
+      <div class="hero">
+        <div class="hero-content">
+          <h1 class="hero-title">
+            <span class="title-icon">🎯</span>
+            <span data-i18n="home.title">LinguaDrill</span>
+          </h1>
+          <p class="hero-subtitle" data-i18n="home.subtitle">高效英语学习引擎</p>
+          <p class="hero-desc" data-i18n="home.description">基于高频词汇、句型操练和跟读训练的沉浸式学习体验</p>
+          <button class="cta-btn" id="startBtn" data-i18n="home.startBtn">开始第一天学习</button>
+        </div>
+      </div>
+
+      <div class="philosophy-section">
+        <h2 class="section-title" data-i18n="home.philosophy.title">学习理念</h2>
+        <div class="philosophy-grid">
+          <div class="philosophy-card">
+            <div class="philosophy-icon">👂</div>
+            <h3 data-i18n="home.philosophy.listening">听说优先</h3>
+            <p>在开口说之前，先培养听力理解能力</p>
+          </div>
+          <div class="philosophy-card">
+            <div class="philosophy-icon">🔄</div>
+            <h3 data-i18n="home.philosophy.pattern">句型操练</h3>
+            <p>通过模板替换，掌握英语核心句式</p>
+          </div>
+          <div class="philosophy-card">
+            <div class="philosophy-icon">🎤</div>
+            <h3 data-i18n="home.philosophy.shadowing">跟读训练</h3>
+            <p>影子跟读法，提升发音和流利度</p>
+          </div>
+          <div class="philosophy-card">
+            <div class="philosophy-icon">📈</div>
+            <h3 data-i18n="home.philosophy.gradual">循序渐进</h3>
+            <p>科学规划学习路径，稳步提升</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Words Page -->
+    <section id="words" class="page words-page">
+      <div class="page-header">
+        <h1 data-i18n="words.title">高频词汇</h1>
+        <p>Day 1 - 基础高频词</p>
+      </div>
+      
+      <div class="words-toolbar">
+        <div class="speed-control">
+          <label for="wordSpeedSlider" data-i18n="words.speed">语速</label>
+          <input type="range" id="wordSpeedSlider" min="0.5" max="2" step="0.1" value="1">
+          <span id="wordSpeedValue">1.0x</span>
+        </div>
+        <button id="repeatModeBtn" data-i18n="words.repeat">🔁 重复3次: 关</button>
+      </div>
+
+      <div id="wordsList" class="words-list"></div>
+    </section>
+
+    <!-- Patterns Page -->
+    <section id="patterns" class="page patterns-page">
+      <div class="page-header">
+        <h1 data-i18n="patterns.title">句型操练</h1>
+        <p>通过模板替换生成无限句子</p>
+      </div>
+
+      <div class="patterns-toolbar">
+        <div class="toolbar-row">
+          <button id="generateSentenceBtn" class="toolbar-btn" data-i18n="patterns.generate">🔄 生成新句子</button>
+          <button id="playSentenceBtn" class="toolbar-btn secondary" data-i18n="patterns.play">🔊 播放</button>
+          <button id="autoPlayBtn" class="toolbar-btn secondary" data-i18n="patterns.autoPlay">🔊 自动播放: 关</button>
+        </div>
+        <div class="speed-control">
+          <label for="patternSpeedSlider" data-i18n="words.speed">语速</label>
+          <input type="range" id="patternSpeedSlider" min="0.5" max="2" step="0.1" value="1">
+          <span id="patternSpeedValue">1.0x</span>
+        </div>
+      </div>
+
+      <div class="sentence-display-area">
+        <div id="sentenceDisplay" class="fade-in">Click "Generate" to start</div>
+        <div id="templateDisplay"></div>
+      </div>
+
+      <div id="patternList" class="pattern-list"></div>
+    </section>
+
+    <!-- Shadowing Page -->
+    <section id="shadowing" class="page shadowing-page">
+      <div class="page-header">
+        <h1 data-i18n="shadowing.title">影子跟读</h1>
+        <p>听句子，然后模仿跟读</p>
+      </div>
+
+      <div class="shadowing-toolbar">
+        <div class="speed-control">
+          <label for="shadowingSpeedSlider" data-i18n="words.speed">语速</label>
+          <input type="range" id="shadowingSpeedSlider" min="0.5" max="2" step="0.1" value="1">
+          <span id="shadowingSpeedValue">1.0x</span>
+        </div>
+      </div>
+
+      <div class="shadowing-player">
+        <div class="shadowing-progress" id="shadowingProgress">1 / 10</div>
+        <div id="shadowingSentenceDisplay" class="shadowing-sentence-display"></div>
+        <div id="shadowingTranslationDisplay" class="shadowing-translation-display"></div>
+        <div id="yourTurnIndicator" class="your-turn-indicator">
+          <span class="icon">🎤</span>
+          <span data-i18n="shadowing.yourTurn">轮到你了！</span>
+        </div>
+        <div class="shadowing-controls">
+          <button id="shadowingPrevBtn" class="control-btn" data-i18n="shadowing.prev">⬅️ 上一个</button>
+          <button id="shadowingPlayBtn" class="control-btn primary" data-i18n="shadowing.play">🔊 听一遍</button>
+          <button id="shadowingReplayBtn" class="control-btn" data-i18n="shadowing.slow">🐢 慢速</button>
+          <button id="shadowingNextBtn" class="control-btn primary" data-i18n="shadowing.next">下一个 ➡️</button>
+        </div>
+      </div>
+
+      <div id="shadowingList" class="shadowing-list"></div>
+    </section>
+
+    <!-- Progress Page -->
+    <section id="progress" class="page progress-page">
+      <div class="page-header">
+        <h1 data-i18n="progress.title">学习进度</h1>
+        <p>追踪你的学习成果</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📚</div>
+          <div class="stat-value" id="wordsLearned">0</div>
+          <div class="stat-label" data-i18n="progress.words">已学词汇</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔄</div>
+          <div class="stat-value" id="patternsPracticed">0</div>
+          <div class="stat-label" data-i18n="progress.patterns">句型练习</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🎤</div>
+          <div class="stat-value" id="shadowingCompleted">0</div>
+          <div class="stat-label" data-i18n="progress.shadowing">跟读完成</div>
+        </div>
+        <div class="stat-card streak">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-value" id="streakCount">0</div>
+          <div class="stat-label" data-i18n="progress.streak">连续天数</div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-section-title">今日进度</div>
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-name" data-i18n="progress.words">词汇</span>
+            <span class="progress-text" id="wordsProgressText">0/20</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="wordsProgress" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-name" data-i18n="progress.patterns">句型</span>
+            <span class="progress-text" id="patternsProgressText">0/8</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="patternsProgress" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="progress-item">
+          <div class="progress-header">
+            <span class="progress-name" data-i18n="progress.shadowing">跟读</span>
+            <span class="progress-text" id="shadowingProgressText">0/10</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="shadowingProgress" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="history-section">
+        <div class="section-header">
+          <h3 class="section-title" data-i18n="progress.history">学习历史</h3>
+        </div>
+        <div id="progressHistory" class="history-list"></div>
+      </div>
+
+      <div class="achievements-section">
+        <div class="section-header">
+          <h3 class="section-title" data-i18n="progress.achievements">成就</h3>
+        </div>
+        <div id="achievementsList" class="achievements-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" id="bottomNav" role="navigation" aria-label="Main navigation">
+    <div class="nav-list">
+      <button class="nav-item active" data-page="home" aria-label="首页">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">首页</span>
+      </button>
+      <button class="nav-item" data-page="words" aria-label="词汇">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label">词汇</span>
+      </button>
+      <button class="nav-item" data-page="patterns" aria-label="句型">
+        <span class="nav-icon">🔄</span>
+        <span class="nav-label">句型</span>
+      </button>
+      <button class="nav-item" data-page="shadowing" aria-label="跟读">
+        <span class="nav-icon">🎤</span>
+        <span class="nav-label">跟读</span>
+      </button>
+      <button class="nav-item" data-page="progress" aria-label="进度">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">进度</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Scripts -->
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <script src="app.js"></script>
+</body>
+</html>
