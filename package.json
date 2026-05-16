@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "Open Source Language Acquisition Engine - English Learning Web Application",
   "main": "index.html",
+  "scripts": {
+    "start": "node build.js && npx serve dist -l 8000",
+    "build": "node build.js",
+    "dev": "npx serve -l 8000"
+  },
   "keywords": [
     "english-learning",
     "education",
@@ -12,5 +17,8 @@
     "shadowing"
   ],
   "author": "LinguaDrill Team",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
 }
