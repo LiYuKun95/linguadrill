@@ -1,0 +1,17 @@
+# Cloudflare Pages Configuration
+name = "linguadrill"
+compatibility_date = "2024-05-16"
+
+[build]
+  # Static site - no build command or framework
+  command = ""
+  cwd = ""
+  watch_dir = ""
+
+[build.environment]
+  # Static site environment
+
+[[redirects]]
+  from = "/*"
+  to = "/"
+  status = 200
