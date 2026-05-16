@@ -1,0 +1,27 @@
+{
+  "name": "linguadrill",
+  "version": "1.0.0",
+  "description": "Open Source Language Acquisition Engine - English Learning Web Application",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve -l 8000",
+    "dev": "serve -l 8000 -s",
+    "serve": "npx serve -l 8000"
+  },
+  "keywords": [
+    "english-learning",
+    "education",
+    "language-acquisition",
+    "vocabulary",
+    "pattern-drill",
+    "shadowing"
+  ],
+  "author": "LinguaDrill Team",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

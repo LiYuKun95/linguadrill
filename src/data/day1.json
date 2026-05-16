@@ -1,0 +1,277 @@
+{
+  "day": 1,
+  "title": "基础高频词",
+  "titleEn": "Basic High-Frequency Words",
+  "words": [
+    {
+      "word": "hello",
+      "phonetic": "/həˈloʊ/",
+      "translation": "你好",
+      "example": "Hello, how are you?",
+      "exampleCn": "你好，你好吗？"
+    },
+    {
+      "word": "good",
+      "phonetic": "/ɡʊd/",
+      "translation": "好的",
+      "example": "This is good.",
+      "exampleCn": "这个很好。"
+    },
+    {
+      "word": "morning",
+      "phonetic": "/ˈmɔːrnɪŋ/",
+      "translation": "早晨",
+      "example": "Good morning!",
+      "exampleCn": "早上好！"
+    },
+    {
+      "word": "afternoon",
+      "phonetic": "/ˌæftərˈnuːn/",
+      "translation": "下午",
+      "example": "Good afternoon!",
+      "exampleCn": "下午好！"
+    },
+    {
+      "word": "evening",
+      "phonetic": "/ˈiːvnɪŋ/",
+      "translation": "晚上",
+      "example": "Good evening!",
+      "exampleCn": "晚上好！"
+    },
+    {
+      "word": "night",
+      "phonetic": "/naɪt/",
+      "translation": "夜晚",
+      "example": "Good night!",
+      "exampleCn": "晚安！"
+    },
+    {
+      "word": "thank",
+      "phonetic": "/θæŋk/",
+      "translation": "感谢",
+      "example": "Thank you!",
+      "exampleCn": "谢谢！"
+    },
+    {
+      "word": "you",
+      "phonetic": "/juː/",
+      "translation": "你/你们",
+      "example": "How are you?",
+      "exampleCn": "你好吗？"
+    },
+    {
+      "word": "I",
+      "phonetic": "/aɪ/",
+      "translation": "我",
+      "example": "I am happy.",
+      "exampleCn": "我很开心。"
+    },
+    {
+      "word": "am",
+      "phonetic": "/æm/",
+      "translation": "是（第一人称）",
+      "example": "I am a student.",
+      "exampleCn": "我是一名学生。"
+    },
+    {
+      "word": "is",
+      "phonetic": "/ɪz/",
+      "translation": "是（第三人称单数）",
+      "example": "He is here.",
+      "exampleCn": "他在这里。"
+    },
+    {
+      "word": "are",
+      "phonetic": "/ɑːr/",
+      "translation": "是（第二人称/复数）",
+      "example": "You are nice.",
+      "exampleCn": "你很好。"
+    },
+    {
+      "word": "this",
+      "phonetic": "/ðɪs/",
+      "translation": "这个",
+      "example": "This is a book.",
+      "exampleCn": "这是一本书。"
+    },
+    {
+      "word": "that",
+      "phonetic": "/ðæt/",
+      "translation": "那个",
+      "example": "That is a cat.",
+      "exampleCn": "那是一只猫。"
+    },
+    {
+      "word": "what",
+      "phonetic": "/wʌt/",
+      "translation": "什么",
+      "example": "What is this?",
+      "exampleCn": "这是什么？"
+    },
+    {
+      "word": "how",
+      "phonetic": "/haʊ/",
+      "translation": "如何",
+      "example": "How are you?",
+      "exampleCn": "你好吗？"
+    },
+    {
+      "word": "who",
+      "phonetic": "/huː/",
+      "translation": "谁",
+      "example": "Who are you?",
+      "exampleCn": "你是谁？"
+    },
+    {
+      "word": "where",
+      "phonetic": "/wer/",
+      "translation": "哪里",
+      "example": "Where are you?",
+      "exampleCn": "你在哪里？"
+    },
+    {
+      "word": "when",
+      "phonetic": "/wen/",
+      "translation": "什么时候",
+      "example": "When is the meeting?",
+      "exampleCn": "会议是什么时候？"
+    },
+    {
+      "word": "why",
+      "phonetic": "/waɪ/",
+      "translation": "为什么",
+      "example": "Why are you here?",
+      "exampleCn": "你为什么在这里？"
+    }
+  ],
+  "patterns": [
+    {
+      "template": "{greeting}, {name}!",
+      "description": "问候语",
+      "descriptionEn": "Greetings",
+      "placeholders": {
+        "greeting": ["Hello", "Hi", "Good morning", "Good afternoon", "Good evening"],
+        "name": ["John", "Mary", "Tom", "Lisa", "friend"]
+      }
+    },
+    {
+      "template": "I am {feeling}.",
+      "description": "表达感受",
+      "descriptionEn": "Expressing feelings",
+      "placeholders": {
+        "feeling": ["happy", "sad", "tired", "excited", "hungry"]
+      }
+    },
+    {
+      "template": "This is a {noun}.",
+      "description": "介绍物品",
+      "descriptionEn": "Introducing objects",
+      "placeholders": {
+        "noun": ["book", "pen", "desk", "computer", "phone"]
+      }
+    },
+    {
+      "template": "{question} is this?",
+      "description": "询问",
+      "descriptionEn": "Asking questions",
+      "placeholders": {
+        "question": ["What", "Who", "Where", "When"]
+      }
+    },
+    {
+      "template": "Thank you for {action}.",
+      "description": "感谢",
+      "descriptionEn": "Expressing gratitude",
+      "placeholders": {
+        "action": ["your help", "coming", "the gift", "everything", "support"]
+      }
+    },
+    {
+      "template": "{person} is {adjective}.",
+      "description": "描述人物",
+      "descriptionEn": "Describing people",
+      "placeholders": {
+        "person": ["He", "She", "My friend", "The teacher", "My mom"],
+        "adjective": ["nice", "kind", "smart", "funny", "tall"]
+      }
+    },
+    {
+      "template": "I like {thing}.",
+      "description": "表达喜好",
+      "descriptionEn": "Expressing preferences",
+      "placeholders": {
+        "thing": ["coffee", "music", "books", "movies", "sports"]
+      }
+    },
+    {
+      "template": "Where is {object}?",
+      "description": "询问位置",
+      "descriptionEn": "Asking about location",
+      "placeholders": {
+        "object": ["the bathroom", "my phone", "the restaurant", "your bag", "the station"]
+      }
+    }
+  ],
+  "shadowing": [
+    {
+      "id": 1,
+      "sentence": "Hello, how are you?",
+      "translation": "你好，你好吗？",
+      "difficulty": "easy"
+    },
+    {
+      "id": 2,
+      "sentence": "Good morning! How was your night?",
+      "translation": "早上好！你昨晚过得怎么样？",
+      "difficulty": "easy"
+    },
+    {
+      "id": 3,
+      "sentence": "I am happy to meet you.",
+      "translation": "很高兴见到你。",
+      "difficulty": "easy"
+    },
+    {
+      "id": 4,
+      "sentence": "Thank you for your help.",
+      "translation": "谢谢你的帮助。",
+      "difficulty": "easy"
+    },
+    {
+      "id": 5,
+      "sentence": "What is your name?",
+      "translation": "你叫什么名字？",
+      "difficulty": "easy"
+    },
+    {
+      "id": 6,
+      "sentence": "This is a beautiful day.",
+      "translation": "今天是美好的一天。",
+      "difficulty": "easy"
+    },
+    {
+      "id": 7,
+      "sentence": "I like learning English.",
+      "translation": "我喜欢学习英语。",
+      "difficulty": "easy"
+    },
+    {
+      "id": 8,
+      "sentence": "Where are you from?",
+      "translation": "你来自哪里？",
+      "difficulty": "easy"
+    },
+    {
+      "id": 9,
+      "sentence": "She is a very kind person.",
+      "translation": "她是一个非常善良的人。",
+      "difficulty": "medium"
+    },
+    {
+      "id": 10,
+      "sentence": "Good evening! How was your day?",
+      "translation": "晚上好！你今天过得怎么样？",
+      "difficulty": "medium"
+    }
+  ]
+}

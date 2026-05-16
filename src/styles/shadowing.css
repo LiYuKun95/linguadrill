@@ -1,0 +1,313 @@
+/**
+ * Shadowing Module Styles
+ * Focused UI for shadowing practice with "Your Turn" indicator
+ */
+
+/* Shadowing Page */
+.shadowing-page {
+  padding-bottom: 6rem;
+}
+
+/* Toolbar */
+.shadowing-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.5rem;
+}
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.speed-control label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+#shadowingSpeedSlider {
+  flex: 1;
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 4px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+#shadowingSpeedSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+#shadowingSpeedValue {
+  font-weight: 600;
+  color: var(--primary-color);
+  min-width: 3rem;
+  text-align: right;
+}
+
+/* Main Player Area */
+.shadowing-player {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FCE7F3 100%);
+  border-radius: var(--radius-xl);
+  padding: 2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  position: relative;
+}
+
+/* Progress Indicator */
+.shadowing-progress {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Sentence Display */
+.shadowing-sentence-display {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.4;
+  min-height: 3rem;
+}
+
+.shadowing-translation-display {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  min-height: 1.5rem;
+}
+
+/* Your Turn Indicator */
+.your-turn-indicator {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: var(--success-color);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: var(--radius-lg);
+  font-size: 1.125rem;
+  font-weight: 600;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.your-turn-indicator .icon {
+  font-size: 1.5rem;
+}
+
+/* Control Buttons */
+.shadowing-controls {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.control-btn {
+  background: var(--bg-color);
+  border: 2px solid var(--border-color);
+  padding: 1rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 100px;
+  justify-content: center;
+}
+
+.control-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.control-btn:active {
+  transform: translateY(0);
+}
+
+.control-btn.primary {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.control-btn.primary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+/* Sentence List */
+.shadowing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.shadowing-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-color);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shadowing-item:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.shadowing-item.active {
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+}
+
+.shadowing-number {
+  width: 32px;
+  height: 32px;
+  background: var(--bg-secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.shadowing-item.active .shadowing-number {
+  background: var(--primary-color);
+  color: white;
+}
+
+.shadowing-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.shadowing-sentence {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shadowing-translation {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shadowing-difficulty {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.shadowing-difficulty.easy {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.shadowing-difficulty.medium {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+/* Tablet and Desktop */
+@media (min-width: 768px) {
+  .shadowing-toolbar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .speed-control {
+    width: auto;
+    min-width: 250px;
+  }
+
+  .shadowing-player {
+    padding: 3rem 2rem;
+  }
+
+  .shadowing-sentence-display {
+    font-size: 2rem;
+  }
+
+  .shadowing-translation-display {
+    font-size: 1.125rem;
+  }
+
+  .control-btn {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+
+  .shadowing-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .shadowing-sentence-display {
+    font-size: 2.5rem;
+  }
+
+  .shadowing-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
