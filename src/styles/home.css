@@ -1,17 +1,692 @@
 /**
- * Home Page Styles - Mobile-First, Duolingo-Inspired
- * Compact grid layout for learning modules
+ * Home Page - Metro-Style Adaptive Dashboard
+ * Modular tiles, asymmetric grid, responsive breakpoints
  */
 
-/* Home page base */
+/* ====================================
+   HOME PAGE BASE
+   ==================================== */
+
 #home {
   padding-bottom: 0;
 }
 
 /* ====================================
-   HERO SECTION - Compact banner
+   METRO DASHBOARD CONTAINER
+   Metro-style: priority-based asymmetric layout
    ==================================== */
 
+.metro-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tile-gap);
+}
+
+/* ====================================
+   METRO TILE SYSTEM
+   Three sizes: small / medium / large
+   ==================================== */
+
+/* TILE: Large - Daily Goal / Continue Learning */
+.metro-tile--large {
+  grid-column: 1 / -1 !important;
+}
+
+/* TILE: Medium - Most modules */
+.metro-tile--medium {
+  /* spans 1 col on mobile, grows on larger screens */
+}
+
+/* TILE: Small - Compact stats/metadata */
+.metro-tile--small {
+  /* spans 1 col, compact padding */
+}
+
+/* ====================================
+   METRO GRID - 2-col mobile, 3-col tablet, 4-col desktop
+   ==================================== */
+
+.metro-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--tile-gap);
+}
+
+/* Asymmetric: first row takes full width (hero/action) */
+.metro-grid--hero {
+  grid-template-columns: 1fr;
+}
+
+/* Tablet: 3-col responsive grid */
+@media (min-width: 431px) {
+  .metro-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Desktop: 4-col with metro asymmetry */
+@media (min-width: 769px) {
+  .metro-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Large tiles span 2 columns on desktop */
+  .metro-tile--large {
+    grid-column: span 2 !important;
+  }
+
+  /* Wide tiles span 3 columns */
+  .metro-tile--wide {
+    grid-column: span 3 !important;
+  }
+}
+
+/* ====================================
+   METRO TILE BASE
+   ==================================== */
+
+.metro-tile {
+  background: var(--bg-color);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--tile-radius);
+  padding: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  box-shadow: var(--shadow-tile);
+  min-height: 72px; /* Touch target */
+}
+
+/* Tile left accent bar */
+.metro-tile::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--tile-color, var(--primary-color));
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
+}
+
+.metro-tile:hover {
+  border-color: var(--tile-color, var(--primary-color));
+  box-shadow: var(--shadow-tile-hover);
+  transform: translateY(-2px);
+}
+
+.metro-tile:hover::before {
+  opacity: 1;
+}
+
+.metro-tile:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Tile Header Row */
+.metro-tile__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.metro-tile__icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.metro-tile__badge {
+  background: var(--tile-bg, var(--primary-light));
+  color: var(--tile-color, var(--primary-color));
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Progress Ring */
+.metro-progress-ring {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--tile-color, var(--primary-color)) 0deg,
+    var(--border-color) 0deg
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.metro-tile__title {
+  font-size: var(--font-tile-title);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+.metro-tile__desc {
+  font-size: var(--font-tile-desc);
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.metro-tile__stats {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: auto;
+}
+
+.metro-tile__stats-icon {
+  font-size: 0.75rem;
+}
+
+/* ====================================
+   TILE COLOR VARIANTS
+   ==================================== */
+
+.metro-tile[data-tile="words"]     { --tile-color: #4F46E5; --tile-bg: #EEF2FF; }
+.metro-tile[data-tile="patterns"]  { --tile-color: #10B981; --tile-bg: #D1FAE5; }
+.metro-tile[data-tile="shadowing"]{ --tile-color: #F59E0B; --tile-bg: #FEF3C7; }
+.metro-tile[data-tile="review"]    { --tile-color: #EF4444; --tile-bg: #FEE2E2; }
+.metro-tile[data-tile="progress"]  { --tile-color: #8B5CF6; --tile-bg: #EDE9FE; }
+.metro-tile[data-tile="listening"] { --tile-color: #06B6D4; --tile-bg: #CFFAFE; }
+.metro-tile[data-tile="goal"]      { --tile-color: #F97316; --tile-bg: #FFEDD5; }
+.metro-tile[data-tile="week"]       { --tile-color: #84CC16; --tile-bg: #ECFCCB; }
+.metro-tile[data-tile="streak"]     { --tile-color: #EF4444; --tile-bg: #FEE2E2; }
+
+/* ====================================
+   CONTINUE LEARNING TILE (Hero Action)
+   Priority: TOP - Large tile with gradient
+   ==================================== */
+
+.tile-continue {
+  --tile-color: var(--primary-color);
+  --tile-bg: var(--primary-light);
+  background: linear-gradient(135deg, var(--primary-light) 0%, #F5F3FF 100%) !important;
+  border-color: var(--primary-color) !important;
+  padding: 1rem 1.125rem !important;
+  min-height: 100px;
+}
+
+.tile-continue::before {
+  width: 4px;
+  opacity: 1;
+  background: var(--primary-color);
+}
+
+.tile-continue .metro-tile__icon {
+  font-size: 2rem;
+}
+
+.tile-continue .metro-tile__title {
+  font-size: clamp(1rem, 3.5vw, 1.2rem);
+  color: var(--primary-color);
+}
+
+.tile-continue .metro-tile__desc {
+  font-size: var(--font-sm);
+}
+
+/* CTA Button inside tile */
+.tile-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+  font-family: inherit;
+  box-shadow: var(--shadow-primary);
+  margin-top: 0.25rem;
+  min-height: 40px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tile-cta:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+}
+
+.tile-cta:active {
+  transform: translateY(0);
+}
+
+/* ====================================
+   DAILY GOAL TILE
+   Priority: HIGH - Shows progress + target
+   ==================================== */
+
+.tile-daily-goal {
+  --tile-color: #F97316;
+  --tile-bg: #FFEDD5;
+  background: linear-gradient(135deg, #FFEDD5 0%, #FEF3C7 100%) !important;
+  border-color: #F97316 !important;
+  min-height: 88px;
+  justify-content: center;
+}
+
+.tile-daily-goal .metro-tile__header {
+  align-items: center;
+}
+
+.tile-daily-goal .metro-tile__icon {
+  font-size: 1.75rem;
+}
+
+.tile-daily-goal .metro-tile__title {
+  color: #C2410C;
+}
+
+.tile-daily-goal .metro-tile__desc {
+  color: #9A3412;
+}
+
+/* Goal Progress Bar */
+.goal-progress {
+  margin-top: 0.4rem;
+}
+
+.goal-bar-bg {
+  height: 8px;
+  background: rgba(0,0,0,0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.goal-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #F97316, #FB923C);
+  border-radius: var(--radius-full);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 4px;
+}
+
+.goal-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #9A3412;
+  margin-top: 0.2rem;
+}
+
+/* ====================================
+   QUICK STATS ROW
+   3 pills: Words / Patterns / Shadowing
+   ==================================== */
+
+.quick-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: var(--tile-gap);
+}
+
+.quick-stat-pill {
+  background: var(--bg-color);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.4rem;
+  text-align: center;
+  transition: var(--transition-fast);
+  cursor: default;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.quick-stat-pill:hover {
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+}
+
+.quick-stat-pill__value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.quick-stat-pill__label {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Tablet: wider pills */
+@media (min-width: 431px) {
+  .quick-stats-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+  }
+
+  .quick-stat-pill {
+    padding: 0.6rem 0.5rem;
+    min-height: 68px;
+  }
+
+  .quick-stat-pill__value {
+    font-size: 1.4rem;
+  }
+
+  .quick-stat-pill__label {
+    font-size: 0.68rem;
+  }
+}
+
+/* ====================================
+   SECTION HEADER
+   ==================================== */
+
+.metro-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.metro-section-title {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  letter-spacing: -0.2px;
+}
+
+.metro-section-title__icon {
+  font-size: 0.95rem;
+}
+
+.metro-section-action {
+  font-size: var(--font-xs);
+  color: var(--primary-color);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.metro-section-action:hover {
+  color: var(--primary-dark);
+}
+
+/* ====================================
+   WEEK PLAN TILE (Small)
+   ==================================== */
+
+.tile-week-plan {
+  --tile-color: #84CC16;
+  --tile-bg: #ECFCCB;
+  background: linear-gradient(135deg, #ECFCCB 0%, #D9F7D0 100%) !important;
+  border-color: #84CC16 !important;
+  min-height: 72px;
+  justify-content: center;
+}
+
+.tile-week-plan .metro-tile__icon {
+  font-size: 1.3rem;
+}
+
+.tile-week-plan .metro-tile__title {
+  color: #3F6212;
+}
+
+.tile-week-plan .metro-tile__desc {
+  color: #65A30D;
+}
+
+/* ====================================
+   REVIEW TILE (Small)
+   ==================================== */
+
+.tile-review {
+  --tile-color: #EF4444;
+  --tile-bg: #FEE2E2;
+  background: linear-gradient(135deg, #FEE2E2 0%, #FEF2F2 100%) !important;
+  border-color: #EF4444 !important;
+  min-height: 72px;
+  justify-content: center;
+}
+
+.tile-review .metro-tile__icon {
+  font-size: 1.3rem;
+}
+
+.tile-review .metro-tile__title {
+  color: #B91C1C;
+}
+
+/* ====================================
+   PHILOSOPHY / METHOD SECTION
+   Compact 2x2 → 4-col on tablet
+   ==================================== */
+
+.philosophy-section {
+  margin-top: var(--space-4);
+}
+
+.philosophy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.philosophy-card {
+  background: var(--bg-color);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.7rem 0.65rem;
+  text-align: center;
+  transition: var(--transition-base);
+  min-height: 68px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.2rem;
+  cursor: default;
+}
+
+.philosophy-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.philosophy-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.philosophy-card h3 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.philosophy-card p {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  line-height: 1.3;
+  display: none; /* Hidden on mobile to save space */
+}
+
+@media (min-width: 431px) {
+  .philosophy-card p { display: block; }
+}
+
+/* Tablet: 4-col philosophy */
+@media (min-width: 431px) {
+  .philosophy-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+  }
+
+  .philosophy-card {
+    padding: 0.8rem 0.5rem;
+  }
+
+  .philosophy-card h3 {
+    font-size: 0.78rem;
+  }
+}
+
+/* ====================================
+   TABLET RESPONSIVE OVERRIDES
+   Larger tiles, better spacing
+   ==================================== */
+
+@media (min-width: 431px) {
+  .metro-tile {
+    padding: 1rem 0.875rem;
+    min-height: 88px;
+  }
+
+  .tile-continue {
+    padding: 1.25rem 1.5rem !important;
+    min-height: 120px;
+  }
+
+  .tile-continue .metro-tile__icon {
+    font-size: 2.5rem;
+  }
+
+  .tile-daily-goal {
+    min-height: 100px;
+  }
+
+  .metro-tile__icon {
+    font-size: 1.75rem;
+  }
+
+  .metro-tile__title {
+    font-size: 0.95rem;
+  }
+
+  .metro-tile__desc {
+    font-size: 0.75rem;
+  }
+}
+
+/* ====================================
+   DESKTOP RESPONSIVE OVERRIDES
+   Metro dashboard with asymmetry
+   ==================================== */
+
+@media (min-width: 769px) {
+  .metro-dashboard {
+    gap: 1rem;
+  }
+
+  .metro-tile {
+    padding: 1.125rem 1rem;
+    min-height: 100px;
+  }
+
+  .tile-continue {
+    padding: 1.5rem 1.75rem !important;
+    min-height: 130px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  .tile-continue .metro-tile__body {
+    flex: 1;
+  }
+
+  .tile-continue .metro-tile__icon {
+    font-size: 3rem;
+  }
+
+  .tile-daily-goal {
+    flex-direction: row;
+    align-items: center;
+    min-height: 100px;
+    gap: 1rem;
+  }
+
+  .tile-daily-goal .metro-tile__body {
+    flex: 1;
+  }
+
+  .goal-progress {
+    min-width: 120px;
+    margin-top: 0;
+  }
+
+  .metro-tile__icon {
+    font-size: 2rem;
+  }
+
+  /* Desktop: Quick stats becomes 5-col */
+  .quick-stats-row {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 100%;
+  }
+}
+
+/* ====================================
+   TOUCH UX POLISH
+   All interactive elements ≥ 44px touch target
+   ==================================== */
+
+/* Ensure all tile click areas are large enough */
+.metro-tile {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Smooth scroll on touch */
+@media (hover: none) {
+  .metro-tile:hover {
+    transform: none;
+  }
+}
+
+/* ====================================
+   LEGACY CLASSES (backward compat)
+   ==================================== */
+
+/* Legacy hero section - still used by home.js */
 .hero {
   padding: 1rem 0;
   background: linear-gradient(135deg, #EEF2FF 0%, #F0FDFA 60%, #FEF3C7 100%);
@@ -20,6 +695,7 @@
   padding: 1rem 1.125rem;
   position: relative;
   overflow: hidden;
+  display: none; /* Hidden: replaced by metro tiles */
 }
 
 .hero::before {
@@ -33,10 +709,7 @@
   border-radius: 50%;
 }
 
-.hero-content {
-  position: relative;
-  text-align: left;
-}
+.hero-content { position: relative; text-align: left; }
 
 .hero-title {
   display: flex;
@@ -49,20 +722,17 @@
   letter-spacing: -0.5px;
 }
 
-.title-icon {
-  font-size: 1.35rem;
-  flex-shrink: 0;
-}
+.title-icon { font-size: 1.35rem; flex-shrink: 0; }
 
 .hero-subtitle {
-  font-size: 0.85rem;
+  font-size: var(--font-sm);
   font-weight: 600;
   color: var(--secondary-color);
   margin-bottom: 0.3rem;
 }
 
 .hero-desc {
-  font-size: 0.75rem;
+  font-size: var(--font-xs);
   color: var(--text-secondary);
   line-height: 1.45;
   margin-bottom: 0.875rem;
@@ -76,15 +746,16 @@
   color: white;
   border: none;
   padding: 0.7rem 1.25rem;
-  font-size: 0.875rem;
+  font-size: var(--font-body);
   font-weight: 700;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--transition-base);
   box-shadow: var(--shadow-primary);
   font-family: inherit;
   letter-spacing: -0.2px;
   -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
 }
 
 .cta-btn:hover {
@@ -93,20 +764,11 @@
   box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
 }
 
-.cta-btn:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-primary);
-}
+.cta-btn:active { transform: translateY(0); box-shadow: var(--shadow-primary); }
 
-/* ====================================
-   QUICK STATS ROW - Below hero
-   ==================================== */
-
+/* Legacy: Quick stats row */
 .home-quick-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  margin-bottom: var(--space-4);
+  display: none; /* Hidden: replaced by metro quick-stats-row */
 }
 
 .quick-stat-item {
@@ -132,16 +794,11 @@
   margin-top: 0.15rem;
 }
 
-/* ====================================
-   LEARNING MODULES - 2-column compact grid
-   ==================================== */
-
-.learning-modules {
-  margin-bottom: var(--space-4);
-}
+/* Legacy: Learning modules grid */
+.learning-modules { display: none; /* Hidden: replaced by metro-dashboard */ }
 
 .learning-modules-title {
-  font-size: 0.875rem;
+  font-size: var(--font-sm);
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 0.625rem;
@@ -156,21 +813,19 @@
   gap: 0.6rem;
 }
 
-/* Module Card */
 .module-card {
   background: var(--bg-color);
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 0.875rem 0.75rem;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--transition-base);
   position: relative;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   outline: none;
 }
 
-/* Colored left accent bar per module */
 .module-card[data-module="words"]    { --module-color: #4F46E5; }
 .module-card[data-module="patterns"] { --module-color: #10B981; }
 .module-card[data-module="shadowing"]{ --module-color: #F59E0B; }
@@ -179,9 +834,7 @@
 .module-card::after {
   content: '';
   position: absolute;
-  left: 0;
-  top: 20%;
-  bottom: 20%;
+  left: 0; top: 20%; bottom: 20%;
   width: 3px;
   background: var(--module-color, var(--primary-color));
   border-radius: 0 2px 2px 0;
@@ -194,10 +847,7 @@
   box-shadow: var(--shadow-md);
 }
 
-.module-card:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
-}
+.module-card:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
 
 .module-header {
   display: flex;
@@ -206,15 +856,10 @@
   margin-bottom: 0.4rem;
 }
 
-.module-icon {
-  font-size: 1.5rem;
-  line-height: 1;
-}
+.module-icon { font-size: 1.5rem; line-height: 1; }
 
-/* Mini progress ring */
 .module-progress {
-  width: 22px;
-  height: 22px;
+  width: 22px; height: 22px;
   border-radius: 50%;
   background: conic-gradient(var(--module-color, var(--primary-color)) 0deg, var(--border-color) 0deg);
   display: flex;
@@ -249,14 +894,9 @@
   font-weight: 500;
 }
 
-.module-stats .stat-icon {
-  font-size: 0.75rem;
-}
+.module-stats .stat-icon { font-size: 0.75rem; }
 
-/* ====================================
-   TODAY'S STREAK BANNER
-   ==================================== */
-
+/* Legacy: Streak banner */
 .streak-banner {
   display: flex;
   align-items: center;
@@ -274,18 +914,16 @@
   flex-shrink: 0;
 }
 
-.streak-banner-text {
-  flex: 1;
-}
+.streak-banner-text { flex: 1; }
 
 .streak-banner-title {
-  font-size: 0.875rem;
+  font-size: var(--font-sm);
   font-weight: 700;
   color: #92400E;
 }
 
 .streak-banner-sub {
-  font-size: 0.72rem;
+  font-size: var(--font-xs);
   color: #B45309;
 }
 
@@ -296,133 +934,14 @@
   letter-spacing: -1px;
 }
 
-/* ====================================
-   PHILOSOPHY CARDS - Compact 2x2 grid
-   ==================================== */
-
+/* Legacy: Philosophy section */
 .philosophy-section {
   margin-bottom: var(--space-4);
 }
 
 .section-title {
-  font-size: 0.875rem;
+  font-size: var(--font-sm);
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 0.625rem;
-}
-
-.philosophy-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-}
-
-.philosophy-card {
-  background: var(--bg-color);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.7rem 0.65rem;
-  text-align: center;
-  transition: all 0.2s ease;
-}
-
-.philosophy-card:hover {
-  border-color: var(--primary-color);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-
-.philosophy-icon {
-  font-size: 1.3rem;
-  margin-bottom: 0.25rem;
-  line-height: 1;
-}
-
-.philosophy-card h3 {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.philosophy-card p {
-  font-size: 0.65rem;
-  color: var(--text-secondary);
-  line-height: 1.3;
-  margin-top: 0.2rem;
-}
-
-/* ====================================
-   TABLET (768px+)
-   ==================================== */
-
-@media (min-width: 768px) {
-  .hero {
-    padding: 1.5rem 1.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-  }
-
-  .hero-content {
-    flex: 1;
-  }
-
-  .hero-title {
-    font-size: 2rem;
-  }
-
-  .hero-subtitle {
-    font-size: 1rem;
-  }
-
-  .hero-desc {
-    font-size: 0.875rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .modules-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.875rem;
-  }
-
-  .philosophy-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
-  }
-
-  .module-card {
-    padding: 1rem 0.875rem;
-  }
-
-  .module-icon {
-    font-size: 1.75rem;
-  }
-
-  .module-title {
-    font-size: 0.95rem;
-  }
-
-  .module-desc {
-    font-size: 0.78rem;
-  }
-
-  .home-quick-stats {
-    max-width: 360px;
-  }
-}
-
-/* ====================================
-   DESKTOP (1024px+)
-   ==================================== */
-
-@media (min-width: 1024px) {
-  .modules-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-  }
-
-  .philosophy-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }

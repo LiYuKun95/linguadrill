@@ -46,124 +46,175 @@
 
   <!-- Main Content -->
   <main id="mainContent">
-    <!-- Home Page -->
+    <!-- Home Page - Metro Dashboard -->
     <section id="home" class="page active">
-      <div class="hero">
-        <div class="hero-content">
-          <h1 class="hero-title">
-            <span class="title-icon">🎯</span>
-            <span data-i18n="home.title">LinguaDrill</span>
-          </h1>
-          <p class="hero-subtitle" data-i18n="home.subtitle">高效英语学习引擎</p>
-          <p class="hero-desc" data-i18n="home.description">基于高频词汇、句型操练和跟读训练</p>
-          <button class="cta-btn" id="startBtn" data-i18n="home.startBtn">开始今天学习</button>
-        </div>
-      </div>
+      <!-- Metro Dashboard -->
+      <div class="metro-dashboard">
 
-      <!-- Quick Stats Row -->
-      <div class="home-quick-stats">
-        <div class="quick-stat-item">
-          <div class="quick-stat-value" id="homeWordsCount">0</div>
-          <div class="quick-stat-label">已学词汇</div>
-        </div>
-        <div class="quick-stat-item">
-          <div class="quick-stat-value" id="homePatternsCount">0</div>
-          <div class="quick-stat-label">句型练习</div>
-        </div>
-        <div class="quick-stat-item">
-          <div class="quick-stat-value" id="homeShadowingCount">0</div>
-          <div class="quick-stat-label">跟读完成</div>
-        </div>
-      </div>
-
-      <!-- Streak Banner -->
-      <div class="streak-banner" id="streakBanner">
-        <div class="streak-banner-icon">🔥</div>
-        <div class="streak-banner-text">
-          <div class="streak-banner-title">连续学习</div>
-          <div class="streak-banner-sub">Keep it up!</div>
-        </div>
-        <div class="streak-banner-count" id="streakCount">0</div>
-      </div>
-
-      <!-- Learning Modules Grid -->
-      <div class="learning-modules">
-        <h2 class="learning-modules-title" data-i18n="home.modules">📖 学习模块</h2>
-        <div class="modules-grid">
-          <div class="module-card" data-module="words" onclick="navigateTo('words')">
-            <div class="module-header">
-              <span class="module-icon">📚</span>
-              <div class="module-progress" id="wordsProgress"></div>
+        <!-- PRIORITY 1: Continue Learning (Large tile) -->
+        <div class="metro-tile tile-continue metro-tile--large" onclick="navigateTo('words')">
+          <div class="metro-tile__body">
+            <div class="metro-tile__header">
+              <span class="metro-tile__icon">🎯</span>
+              <span class="metro-tile__badge" id="homeDayBadge">Day 1</span>
             </div>
-            <h3 class="module-title" data-i18n="words.title">高频词汇</h3>
-            <p class="module-desc">学习核心高频词，打好基础</p>
-            <div class="module-stats">
-              <span class="stat-icon">✅</span>
+            <h2 class="metro-tile__title" data-i18n="home.continue">继续学习</h2>
+            <p class="metro-tile__desc" data-i18n="home.continueDesc">开始今天的核心词汇练习</p>
+            <button class="tile-cta" id="startBtn">
+              <span>▶</span>
+              <span data-i18n="home.startBtn">开始今天学习</span>
+            </button>
+          </div>
+          <div class="metro-tile__visual" style="font-size:3rem;opacity:0.5;line-height:1">📚</div>
+        </div>
+
+        <!-- PRIORITY 2: Daily Goal (Large tile) -->
+        <div class="metro-tile tile-daily-goal metro-tile--large" onclick="navigateTo('words')">
+          <div class="metro-tile__body">
+            <div class="metro-tile__header">
+              <span class="metro-tile__icon">🎯</span>
+            </div>
+            <h3 class="metro-tile__title">今日目标</h3>
+            <p class="metro-tile__desc" id="dailyGoalText">完成 20 个词汇</p>
+            <div class="goal-progress">
+              <div class="goal-bar-bg">
+                <div class="goal-bar-fill" id="goalBarFill" style="width:0%"></div>
+              </div>
+              <div class="goal-label">
+                <span id="goalCurrent">0</span>
+                <span>/ <span id="goalTarget">20</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRIORITY 3: Quick Stats Row -->
+        <div class="quick-stats-row">
+          <div class="quick-stat-pill">
+            <span class="quick-stat-pill__value" id="homeWordsCount">0</span>
+            <span class="quick-stat-pill__label">已学词汇</span>
+          </div>
+          <div class="quick-stat-pill">
+            <span class="quick-stat-pill__value" id="homePatternsCount">0</span>
+            <span class="quick-stat-pill__label">句型练习</span>
+          </div>
+          <div class="quick-stat-pill">
+            <span class="quick-stat-pill__value" id="homeShadowingCount">0</span>
+            <span class="quick-stat-pill__label">跟读完成</span>
+          </div>
+        </div>
+
+        <!-- Module Grid: Metro tiles -->
+        <div class="metro-grid">
+
+          <!-- Words Module -->
+          <div class="metro-tile" data-tile="words" onclick="navigateTo('words')">
+            <div class="metro-tile__header">
+              <span class="metro-tile__icon">📚</span>
+              <div class="metro-progress-ring" id="wordsProgress"></div>
+            </div>
+            <h3 class="metro-tile__title" data-i18n="words.title">高频词汇</h3>
+            <p class="metro-tile__desc">学习核心高频词，打好基础</p>
+            <div class="metro-tile__stats">
+              <span class="metro-tile__stats-icon">✅</span>
               <span id="wordsLearned">0/587</span>
             </div>
           </div>
 
-          <div class="module-card" data-module="patterns" onclick="navigateTo('patterns')">
-            <div class="module-header">
-              <span class="module-icon">🔄</span>
-              <div class="module-progress" id="patternsProgress"></div>
+          <!-- Patterns Module -->
+          <div class="metro-tile" data-tile="patterns" onclick="navigateTo('patterns')">
+            <div class="metro-tile__header">
+              <span class="metro-tile__icon">🔄</span>
+              <div class="metro-progress-ring" id="patternsProgress"></div>
             </div>
-            <h3 class="module-title" data-i18n="patterns.title">句型操练</h3>
-            <p class="module-desc">替换练习，掌握核心句式</p>
-            <div class="module-stats">
-              <span class="stat-icon">🎯</span>
+            <h3 class="metro-tile__title" data-i18n="patterns.title">句型操练</h3>
+            <p class="metro-tile__desc">替换练习，掌握核心句式</p>
+            <div class="metro-tile__stats">
+              <span class="metro-tile__stats-icon">🎯</span>
               <span id="patternsCompleted">0</span>
             </div>
           </div>
 
-          <div class="module-card" data-module="shadowing" onclick="navigateTo('shadowing')">
-            <div class="module-header">
-              <span class="module-icon">🎤</span>
-              <div class="module-progress" id="shadowingProgress"></div>
+          <!-- Shadowing Module -->
+          <div class="metro-tile" data-tile="shadowing" onclick="navigateTo('shadowing')">
+            <div class="metro-tile__header">
+              <span class="metro-tile__icon">🎤</span>
+              <div class="metro-progress-ring" id="shadowingProgress"></div>
             </div>
-            <h3 class="module-title" data-i18n="shadowing.title">跟读训练</h3>
-            <p class="module-desc">影子跟读法，提升流利度</p>
-            <div class="module-stats">
-              <span class="stat-icon">🔊</span>
+            <h3 class="metro-tile__title" data-i18n="shadowing.title">跟读训练</h3>
+            <p class="metro-tile__desc">影子跟读法，提升流利度</p>
+            <div class="metro-tile__stats">
+              <span class="metro-tile__stats-icon">🔊</span>
               <span id="shadowingCompleted">0</span>
             </div>
           </div>
 
-          <div class="module-card" data-module="progress" onclick="navigateTo('progress')">
-            <div class="module-header">
-              <span class="module-icon">📊</span>
-              <div class="module-progress" id="progressProgress"></div>
+          <!-- Review Module -->
+          <div class="metro-tile tile-review" data-tile="review" onclick="navigateTo('words')">
+            <div class="metro-tile__header">
+              <span class="metro-tile__icon">🔁</span>
             </div>
-            <h3 class="module-title" data-i18n="progress.title">学习进度</h3>
-            <p class="module-desc">查看你的学习旅程</p>
-            <div class="module-stats">
-              <span class="stat-icon">📈</span>
+            <h3 class="metro-tile__title">复习</h3>
+            <p class="metro-tile__desc">巩固已学词汇</p>
+          </div>
+
+          <!-- Week Plan Module -->
+          <div class="metro-tile tile-week-plan" data-tile="week" onclick="navigateTo('words')">
+            <div class="metro-tile__header">
+              <span class="metro-tile__icon">📅</span>
+            </div>
+            <h3 class="metro-tile__title">本周计划</h3>
+            <p class="metro-tile__desc" id="weekPlanText">Week 1 - 生存英语</p>
+          </div>
+
+          <!-- Progress Module -->
+          <div class="metro-tile" data-tile="progress" onclick="navigateTo('progress')">
+            <div class="metro-tile__header">
+              <span class="metro-tile__icon">📊</span>
+              <div class="metro-progress-ring" id="progressProgress"></div>
+            </div>
+            <h3 class="metro-tile__title" data-i18n="progress.title">学习进度</h3>
+            <p class="metro-tile__desc">查看你的学习旅程</p>
+            <div class="metro-tile__stats">
+              <span class="metro-tile__stats-icon">🔥</span>
               <span id="homeStreakDisplay">0天</span>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div class="philosophy-section">
-        <h2 class="section-title" data-i18n="home.philosophy.title">学习理念</h2>
-        <div class="philosophy-grid">
-          <div class="philosophy-card">
-            <div class="philosophy-icon">👂</div>
-            <h3 data-i18n="home.philosophy.listening">听说优先</h3>
+        </div>
+
+        <!-- Philosophy Section -->
+        <div class="philosophy-section">
+          <div class="metro-section-header">
+            <h2 class="metro-section-title">
+              <span class="metro-section-title__icon">💡</span>
+              学习理念
+            </h2>
           </div>
-          <div class="philosophy-card">
-            <div class="philosophy-icon">🔄</div>
-            <h3 data-i18n="home.philosophy.pattern">句型操练</h3>
-          </div>
-          <div class="philosophy-card">
-            <div class="philosophy-icon">🎤</div>
-            <h3 data-i18n="home.philosophy.shadowing">跟读训练</h3>
-          </div>
-          <div class="philosophy-card">
-            <div class="philosophy-icon">📈</div>
-            <h3 data-i18n="home.philosophy.gradual">循序渐进</h3>
+          <div class="philosophy-grid">
+            <div class="philosophy-card">
+              <div class="philosophy-icon">👂</div>
+              <h3>听说优先</h3>
+              <p>真实语境输入</p>
+            </div>
+            <div class="philosophy-card">
+              <div class="philosophy-icon">🔄</div>
+              <h3>句型操练</h3>
+              <p>结构化重复</p>
+            </div>
+            <div class="philosophy-card">
+              <div class="philosophy-icon">🎤</div>
+              <h3>跟读训练</h3>
+              <p>影子跟读法</p>
+            </div>
+            <div class="philosophy-card">
+              <div class="philosophy-icon">📈</div>
+              <h3>循序渐进</h3>
+              <p>高频词优先</p>
+            </div>
           </div>
         </div>
+
       </div>
     </section>
 
@@ -349,7 +400,47 @@
     </section>
   </main>
 
-  <!-- Bottom Navigation -->
+  <!-- Desktop Side Navigation (1024px+) -->
+  <nav class="side-nav" id="sideNav" role="navigation" aria-label="Main navigation">
+    <div class="side-nav__brand">
+      <span class="side-nav__brand-icon">📚</span>
+      <span class="side-nav__brand-name">LinguaDrill</span>
+    </div>
+    <div class="nav-list">
+      <button class="nav-item active" data-page="home" aria-label="首页">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">首页</span>
+      </button>
+      <button class="nav-item" data-page="words" aria-label="词汇">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label">高频词汇</span>
+      </button>
+      <button class="nav-item" data-page="patterns" aria-label="句型">
+        <span class="nav-icon">🔄</span>
+        <span class="nav-label">句型操练</span>
+      </button>
+      <button class="nav-item" data-page="shadowing" aria-label="跟读">
+        <span class="nav-icon">🎤</span>
+        <span class="nav-label">跟读训练</span>
+      </button>
+      <button class="nav-item" data-page="progress" aria-label="进度">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">学习进度</span>
+      </button>
+    </div>
+    <div class="side-nav__stats">
+      <div class="side-nav__stat">
+        <span class="side-nav__stat-icon">🔥</span>
+        <span class="side-nav__stat-value" id="sideNavStreak">0 天连续</span>
+      </div>
+      <div class="side-nav__stat">
+        <span class="side-nav__stat-icon">✅</span>
+        <span class="side-nav__stat-value" id="sideNavLearned">0 已学</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Bottom Navigation (Mobile/Tablet) -->
   <nav class="bottom-nav" id="bottomNav" role="navigation" aria-label="Main navigation">
     <div class="nav-list">
       <button class="nav-item active" data-page="home" aria-label="首页">

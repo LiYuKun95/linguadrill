@@ -1,30 +1,32 @@
 /**
- * Navigation Styles - Compact Mobile-First Design (Rebuilt)
- * Duolingo-style horizontal bottom navigation bar
+ * Navigation - Metro-Inspired Floating Bottom Dock
+ * Adaptive across mobile / small tablet / desktop
+ * Touch-first with thumb-zone optimization
  */
 
 /* ====================================
-   BOTTOM NAVIGATION BAR
+   BOTTOM DOCK - Metro Floating Style
    ==================================== */
 
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
   background: rgba(255, 255, 255, 0.97);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(226, 232, 240, 0.8);
-  padding: 0 0.25rem;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-bottom: none;
   z-index: 1000;
-  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.07);
-  height: 58px;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08), 0 -1px 0 rgba(0,0,0,0.04);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: 64px;
   display: flex;
   align-items: stretch;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
 }
 
 /* Navigation List */
@@ -33,11 +35,8 @@
   justify-content: space-around;
   align-items: stretch;
   width: 100%;
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 0;
+  padding: 0 0.25rem;
   list-style: none;
-  height: 100%;
 }
 
 /* Navigation Item */
@@ -46,87 +45,147 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.18rem;
-  padding: 0.3rem 0.2rem;
+  gap: 0.15rem;
+  padding: 0.4rem 0.15rem;
   background: none;
   border: none;
   cursor: pointer;
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--transition-spring);
   flex: 1;
   min-width: 0;
   position: relative;
   -webkit-tap-highlight-color: transparent;
   outline: none;
+  border-radius: 12px;
+  /* Thumb-zone: bottom nav should feel natural to reach */
+  min-height: 52px;
 }
 
 .nav-item:active {
-  transform: scale(0.9);
+  transform: scale(0.88);
 }
 
-/* Active indicator dot */
-.nav-item.active::before {
+/* Active pill indicator - Metro style dot bar */
+.nav-item.active::after {
   content: '';
   position: absolute;
-  top: 4px;
+  bottom: 6px;
   left: 50%;
   transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
+  width: 20px;
+  height: 3px;
   background: var(--primary-color);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
+  animation: navPillIn 0.2s var(--transition-spring);
+}
+
+@keyframes navPillIn {
+  from { width: 4px; opacity: 0; }
+  to   { width: 20px; opacity: 1; }
 }
 
 /* Navigation Icon */
 .nav-icon {
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   line-height: 1;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform var(--transition-spring);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
 }
 
 .nav-item.active .nav-icon {
-  transform: scale(1.12);
+  transform: scale(1.15) translateY(-2px);
+}
+
+/* Active icon glow effect */
+.nav-item.active .nav-icon {
+  filter: drop-shadow(0 2px 4px rgba(79, 70, 229, 0.3));
 }
 
 /* Navigation Label */
 .nav-label {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
-  letter-spacing: 0.1px;
-  transition: color 0.15s ease;
+  letter-spacing: 0.05px;
+  transition: color var(--transition-fast), font-weight var(--transition-fast);
+  line-height: 1;
 }
 
 .nav-item.active .nav-label {
   color: var(--primary-color);
   font-weight: 700;
-}
-
-/* Main content padding to prevent overlap */
-main {
-  padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  font-size: 0.6rem;
 }
 
 /* ====================================
-   TABLET ADJUSTMENTS
+   SMALL TABLET ADJUSTMENTS (431px+)
+   ==================================== */
+
+@media (min-width: 431px) {
+  .bottom-nav {
+    max-width: 560px;
+    height: 68px;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .nav-item {
+    padding: 0.45rem 0.2rem;
+    min-height: 56px;
+    gap: 0.2rem;
+  }
+
+  .nav-icon {
+    font-size: 1.45rem;
+    width: 32px;
+    height: 32px;
+  }
+
+  .nav-label {
+    font-size: 0.62rem;
+  }
+
+  .nav-item.active .nav-label {
+    font-size: 0.65rem;
+  }
+
+  .nav-item.active::after {
+    width: 24px;
+    bottom: 8px;
+  }
+}
+
+/* ====================================
+   LARGE TABLET (640px+)
    ==================================== */
 
 @media (min-width: 640px) {
   .bottom-nav {
-    height: 62px;
+    max-width: 640px;
+    height: 70px;
   }
 
   .nav-icon {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+    width: 34px;
+    height: 34px;
   }
 
   .nav-label {
     font-size: 0.65rem;
   }
+
+  .nav-item.active::after {
+    width: 28px;
+  }
 }
 
 /* ====================================
-   DESKTOP: SIDE NAVIGATION
+   DESKTOP SIDE NAV (1024px+)
    ==================================== */
 
 @media (min-width: 1024px) {
@@ -135,11 +194,11 @@ main {
   }
 
   main {
-    padding-bottom: 1.5rem;
-    margin-left: 220px;
+    padding-bottom: 2rem;
+    margin-left: 240px;
   }
 
-  /* Side navigation for desktop */
+  /* Desktop sidebar navigation */
   .side-nav {
     display: flex;
     flex-direction: column;
@@ -147,30 +206,43 @@ main {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 220px;
+    width: 240px;
     background: var(--bg-color);
     border-right: 1px solid var(--border-color);
-    padding: 1.25rem 0.75rem;
+    padding: 1.5rem 0.75rem;
     z-index: 100;
+    overflow-y: auto;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.05);
   }
 
-  .side-nav .nav-brand {
+  /* Side nav brand */
+  .side-nav__brand {
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    margin-bottom: 1.5rem;
-    padding: 0 0.5rem 1rem;
+    padding: 0 0.75rem 1.25rem;
+    margin-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
   }
 
-  .side-nav .nav-brand-icon {
-    font-size: 1.6rem;
+  .side-nav__brand-icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
   }
 
-  .side-nav .nav-brand-name {
+  .side-nav__brand-name {
     font-size: 1.1rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--primary-color);
+    letter-spacing: -0.5px;
+  }
+
+  /* Side nav items */
+  .side-nav .nav-list {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 0;
+    gap: 0.2rem;
   }
 
   .side-nav .nav-item {
@@ -179,34 +251,117 @@ main {
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 0.875rem;
-    margin-bottom: 0.25rem;
-    border-radius: 12px;
-    min-width: auto;
+    border-radius: var(--radius-md);
+    min-height: 48px;
+    flex: unset;
   }
 
-  .side-nav .nav-item::before {
+  .side-nav .nav-item.active::after {
     display: none;
   }
 
   .side-nav .nav-item.active {
     background: var(--primary-light);
-  }
-
-  .side-nav .nav-item.active .nav-label {
-    color: var(--primary-color);
+    border-left: 3px solid var(--primary-color);
+    padding-left: calc(0.875rem - 3px);
   }
 
   .side-nav .nav-icon {
     font-size: 1.3rem;
+    width: auto;
+    height: auto;
     flex-shrink: 0;
   }
 
-  .side-nav .nav-item.active .nav-icon {
-    transform: none;
+  .side-nav .nav-icon {
+    transform: none !important;
   }
 
   .side-nav .nav-label {
     font-size: 0.9rem;
     font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .side-nav .nav-item.active .nav-label {
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  /* Side nav section divider */
+  .side-nav__divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 0.75rem 0.875rem;
+  }
+
+  /* Side nav bottom stats */
+  .side-nav__stats {
+    margin-top: auto;
+    padding: 1rem 0.875rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .side-nav__stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  .side-nav__stat-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .side-nav__stat-value {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+}
+
+/* ====================================
+   HOVER EFFECTS (non-touch)
+   ==================================== */
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-item:hover .nav-icon {
+    transform: translateY(-2px) scale(1.08);
+  }
+
+  .nav-item:hover .nav-label {
+    color: var(--text-secondary);
+  }
+
+  .nav-item.active:hover .nav-icon {
+    transform: scale(1.15) translateY(-2px);
+  }
+}
+
+/* ====================================
+   ACCESSIBILITY
+   ==================================== */
+
+.nav-item:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .nav-item,
+  .nav-icon,
+  .nav-label {
+    transition: none;
+  }
+
+  .nav-item.active::after {
+    animation: none;
   }
 }

@@ -1,60 +1,57 @@
 /**
  * Navigation System
- * Sticky bottom mobile navigation with 5 main sections
+ * Metro-inspired floating bottom dock + desktop side nav
+ * Syncs active state across both navigation modes
  */
 const Navigation = (function() {
   const navItems = [
     { id: 'home', icon: '🏠', label: '首页', labelEn: 'Home' },
-    { id: 'words', icon: '📚', label: '词汇', labelEn: 'Words' },
-    { id: 'patterns', icon: '🔄', label: '句型', labelEn: 'Patterns' },
-    { id: 'shadowing', icon: '🎤', label: '跟读', labelEn: 'Shadowing' },
-    { id: 'progress', icon: '📊', label: '进度', labelEn: 'Progress' }
+    { id: 'words', icon: '📚', label: '高频词汇', labelEn: 'Words' },
+    { id: 'patterns', icon: '🔄', label: '句型操练', labelEn: 'Patterns' },
+    { id: 'shadowing', icon: '🎤', label: '跟读训练', labelEn: 'Shadowing' },
+    { id: 'progress', icon: '📊', label: '学习进度', labelEn: 'Progress' }
   ];
 
   let currentPage = 'home';
   let isEnglish = false;
 
   function init() {
-    renderNavigation();
     setupEventListeners();
     highlightCurrentPage();
     updateGlobalStats();
-  }
-
-  function renderNavigation() {
-    const container = document.getElementById('bottomNav');
-    if (!container) return;
-
-    container.innerHTML = navItems.map(item => `
-      <button class="nav-item ${item.id === currentPage ? 'active' : ''}" 
-              data-page="${item.id}"
-              aria-label="${isEnglish ? item.labelEn : item.label}">
-        <span class="nav-icon">${item.icon}</span>
-        <span class="nav-label">${isEnglish ? item.labelEn : item.label}</span>
-      </button>
-    `).join('');
+    updateSideNavStats();
   }
 
   function setupEventListeners() {
-    const container = document.getElementById('bottomNav');
-    if (!container) return;
+    // Bottom nav (mobile/tablet)
+    const bottomNav = document.getElementById('bottomNav');
+    if (bottomNav) {
+      bottomNav.addEventListener('click', (e) => {
+        const navItem = e.target.closest('.nav-item');
+        if (navItem) {
+          navigateTo(navItem.getAttribute('data-page'));
+        }
+      });
+    }
 
-    container.addEventListener('click', (e) => {
-      const navItem = e.target.closest('.nav-item');
-      if (navItem) {
-        const pageId = navItem.getAttribute('data-page');
-        navigateTo(pageId);
-      }
-    });
+    // Side nav (desktop)
+    const sideNav = document.getElementById('sideNav');
+    if (sideNav) {
+      sideNav.addEventListener('click', (e) => {
+        const navItem = e.target.closest('.nav-item');
+        if (navItem) {
+          navigateTo(navItem.getAttribute('data-page'));
+        }
+      });
+    }
   }
 
   function navigateTo(pageId) {
     if (pageId === currentPage) return;
 
-    // Update current page
     currentPage = pageId;
 
-    // Update navigation UI
+    // Update all navigation instances
     highlightCurrentPage();
 
     // Hide all pages
@@ -71,11 +68,11 @@ const Navigation = (function() {
 
     // Update global stats
     updateGlobalStats();
+    updateSideNavStats();
 
     // Refresh page content
     refreshPage(pageId);
 
-    // Dispatch navigation event
     window.dispatchEvent(new CustomEvent('pageChange', { detail: { page: pageId } }));
   }
 
@@ -83,14 +80,24 @@ const Navigation = (function() {
     const learnedWords = Storage.getLearnedWords().length;
     const streak = Storage.getStreak();
 
-    // Update header stats
     const headerStreak = document.getElementById('header-streak');
     const headerLearned = document.getElementById('header-learned');
     if (headerStreak) headerStreak.textContent = streak;
     if (headerLearned) headerLearned.textContent = learnedWords;
   }
 
+  function updateSideNavStats() {
+    const streak = Storage.getStreak();
+    const learned = Storage.getLearnedWords().length;
+
+    const streakEl = document.getElementById('sideNavStreak');
+    const learnedEl = document.getElementById('sideNavLearned');
+    if (streakEl) streakEl.textContent = streak + ' 天连续';
+    if (learnedEl) learnedEl.textContent = learned + ' 已学';
+  }
+
   function highlightCurrentPage() {
+    // Update all nav-item instances (both bottom and side)
     document.querySelectorAll('.nav-item').forEach(item => {
       item.classList.toggle('active', item.getAttribute('data-page') === currentPage);
     });
@@ -118,7 +125,6 @@ const Navigation = (function() {
 
   function setLanguage(isEn) {
     isEnglish = isEn;
-    renderNavigation();
   }
 
   function getCurrentPage() {
