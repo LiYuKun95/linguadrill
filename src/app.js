@@ -5,7 +5,7 @@
 const App = (function() {
   let isInitialized = false;
 
-  function init() {
+  async function init() {
     if (isInitialized) return;
     
     console.log('🚀 Initializing LinguaDrill...');
@@ -16,10 +16,10 @@ const App = (function() {
     // Initialize Navigation (uses AppState)
     Navigation.init();
 
-    // Initialize utilities
-    initUtilities();
+    // Initialize utilities - await to ensure data is loaded before page init
+    await initUtilities();
 
-    // Initialize all pages
+    // Initialize all pages - they will use pre-loaded data from AppState
     initPages();
 
     // Setup global event listeners
@@ -67,10 +67,19 @@ const App = (function() {
     }
   }
 
-  function initPages() {
-    // Each page module has its own init() that renders content
-    const pages = ['HomePage', 'WordsPage', 'PatternsPage', 'ShadowingPage', 'ProgressPage'];
-    pages.forEach(pageName => {
+  async function initPages() {
+    // WordsPage needs to wait for data before initializing
+    const pagePromises = [];
+    
+    // WordsPage should initialize after data is loaded
+    if (typeof WordsPage !== 'undefined' && WordsPage.init) {
+      pagePromises.push(
+        WordsPage.init().catch(e => console.error('Failed to init WordsPage:', e))
+      );
+    }
+    
+    // Other pages can initialize in parallel
+    ['HomePage', 'PatternsPage', 'ShadowingPage', 'ProgressPage'].forEach(pageName => {
       if (typeof window[pageName] !== 'undefined' && window[pageName].init) {
         try {
           window[pageName].init();
@@ -79,6 +88,9 @@ const App = (function() {
         }
       }
     });
+    
+    // Wait for async page inits to complete
+    await Promise.all(pagePromises);
   }
 
   function setupGlobalListeners() {

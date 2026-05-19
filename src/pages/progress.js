@@ -29,19 +29,19 @@ const ProgressPage = (function() {
     const progress = Storage.getProgress();
     const streak = Storage.getStreak();
 
-    // Update main stats
-    updateStat('wordsLearned', stats.learnedWords);
-    updateStat('patternsPracticed', stats.patternsPracticed);
-    updateStat('shadowingCompleted', stats.shadowingCompleted);
-    updateStat('streakCount', streak.current);
+    // Update main stats - use unique IDs for progress page
+    updateStat('progressWordsLearned', stats.learnedWords);
+    updateStat('progressPatternsPracticed', stats.patternsPracticed);
+    updateStat('progressShadowingCompleted', stats.shadowingCompleted);
+    updateStat('progressStreakCount', streak.current);
 
     // Update progress bars
     const totalWords = progress.totalWords || stats.totalWords || 587;
     const wordsTarget = Math.max(20, totalWords);
     
-    updateProgressBar('wordsProgress', stats.learnedWords, wordsTarget);
-    updateProgressBar('patternsProgress', stats.patternsPracticed, 50);
-    updateProgressBar('shadowingProgress', stats.shadowingCompleted, 50);
+    updateProgressBar('progressWordsBar', stats.learnedWords, wordsTarget);
+    updateProgressBar('progressPatternsBar', stats.patternsPracticed, 50);
+    updateProgressBar('progressShadowingBar', stats.shadowingCompleted, 50);
   }
 
   function updateStat(elementId, value) {
@@ -72,9 +72,9 @@ const ProgressPage = (function() {
     requestAnimationFrame(update);
   }
 
-  function updateProgressBar(elementId, current, total) {
-    const bar = document.getElementById(elementId);
-    const text = document.getElementById(elementId + 'Text');
+  function updateProgressBar(barId, current, total) {
+    const bar = document.getElementById(barId);
+    const text = document.getElementById(barId.replace('Bar', 'Text'));
     
     if (bar && total > 0) {
       const percentage = Math.min((current / total) * 100, 100);

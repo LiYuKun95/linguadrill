@@ -74,18 +74,26 @@ const HomePage = (function() {
     if (homePatternsCount) homePatternsCount.textContent = patternsCompleted;
     if (homeShadowingCount) homeShadowingCount.textContent = shadowingCompleted;
 
-    // Streak display
-    const homeStreakDisplay = document.getElementById('homeStreakDisplay');
-    if (homeStreakDisplay) homeStreakDisplay.textContent = streak + '天';
-
-    // Module stats
+    // Module stats - show meaningful text instead of 0 values
     const wordsLearned = document.getElementById('wordsLearned');
     const patternsCompletedEl = document.getElementById('patternsCompleted');
     const shadowingCompletedEl = document.getElementById('shadowingCompleted');
 
-    if (wordsLearned) wordsLearned.textContent = `${learnedWords}/${totalWords}`;
-    if (patternsCompletedEl) patternsCompletedEl.textContent = patternsCompleted;
-    if (shadowingCompletedEl) shadowingCompletedEl.textContent = shadowingCompleted;
+    if (wordsLearned) {
+      wordsLearned.textContent = learnedWords > 0 ? `${learnedWords}/${totalWords}` : '开始学习';
+    }
+    if (patternsCompletedEl) {
+      patternsCompletedEl.textContent = patternsCompleted > 0 ? patternsCompleted : '-';
+    }
+    if (shadowingCompletedEl) {
+      shadowingCompletedEl.textContent = shadowingCompleted > 0 ? shadowingCompleted : '-';
+    }
+
+    // Streak display - show dash when 0
+    const homeStreakDisplay = document.getElementById('homeStreakDisplay');
+    if (homeStreakDisplay) {
+      homeStreakDisplay.textContent = streak > 0 ? `${streak}天` : '-';
+    }
 
     // Metro progress rings
     updateProgressRing('wordsProgress', learnedWords, totalWords);

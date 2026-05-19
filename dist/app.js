@@ -1616,18 +1616,26 @@ const HomePage = (function() {
     if (homePatternsCount) homePatternsCount.textContent = patternsCompleted;
     if (homeShadowingCount) homeShadowingCount.textContent = shadowingCompleted;
 
-    // Streak display
-    const homeStreakDisplay = document.getElementById('homeStreakDisplay');
-    if (homeStreakDisplay) homeStreakDisplay.textContent = streak + '天';
-
-    // Module stats
+    // Module stats - show meaningful text instead of 0 values
     const wordsLearned = document.getElementById('wordsLearned');
     const patternsCompletedEl = document.getElementById('patternsCompleted');
     const shadowingCompletedEl = document.getElementById('shadowingCompleted');
 
-    if (wordsLearned) wordsLearned.textContent = `${learnedWords}/${totalWords}`;
-    if (patternsCompletedEl) patternsCompletedEl.textContent = patternsCompleted;
-    if (shadowingCompletedEl) shadowingCompletedEl.textContent = shadowingCompleted;
+    if (wordsLearned) {
+      wordsLearned.textContent = learnedWords > 0 ? `${learnedWords}/${totalWords}` : '开始学习';
+    }
+    if (patternsCompletedEl) {
+      patternsCompletedEl.textContent = patternsCompleted > 0 ? patternsCompleted : '-';
+    }
+    if (shadowingCompletedEl) {
+      shadowingCompletedEl.textContent = shadowingCompleted > 0 ? shadowingCompleted : '-';
+    }
+
+    // Streak display - show dash when 0
+    const homeStreakDisplay = document.getElementById('homeStreakDisplay');
+    if (homeStreakDisplay) {
+      homeStreakDisplay.textContent = streak > 0 ? `${streak}天` : '-';
+    }
 
     // Metro progress rings
     updateProgressRing('wordsProgress', learnedWords, totalWords);
@@ -2704,19 +2712,19 @@ const ProgressPage = (function() {
     const progress = Storage.getProgress();
     const streak = Storage.getStreak();
 
-    // Update main stats
-    updateStat('wordsLearned', stats.learnedWords);
-    updateStat('patternsPracticed', stats.patternsPracticed);
-    updateStat('shadowingCompleted', stats.shadowingCompleted);
-    updateStat('streakCount', streak.current);
+    // Update main stats - use unique IDs for progress page
+    updateStat('progressWordsLearned', stats.learnedWords);
+    updateStat('progressPatternsPracticed', stats.patternsPracticed);
+    updateStat('progressShadowingCompleted', stats.shadowingCompleted);
+    updateStat('progressStreakCount', streak.current);
 
     // Update progress bars
     const totalWords = progress.totalWords || stats.totalWords || 587;
     const wordsTarget = Math.max(20, totalWords);
     
-    updateProgressBar('wordsProgress', stats.learnedWords, wordsTarget);
-    updateProgressBar('patternsProgress', stats.patternsPracticed, 50);
-    updateProgressBar('shadowingProgress', stats.shadowingCompleted, 50);
+    updateProgressBar('progressWordsBar', stats.learnedWords, wordsTarget);
+    updateProgressBar('progressPatternsBar', stats.patternsPracticed, 50);
+    updateProgressBar('progressShadowingBar', stats.shadowingCompleted, 50);
   }
 
   function updateStat(elementId, value) {
@@ -2747,9 +2755,9 @@ const ProgressPage = (function() {
     requestAnimationFrame(update);
   }
 
-  function updateProgressBar(elementId, current, total) {
-    const bar = document.getElementById(elementId);
-    const text = document.getElementById(elementId + 'Text');
+  function updateProgressBar(barId, current, total) {
+    const bar = document.getElementById(barId);
+    const text = document.getElementById(barId.replace('Bar', 'Text'));
     
     if (bar && total > 0) {
       const percentage = Math.min((current / total) * 100, 100);
@@ -2909,7 +2917,7 @@ const ProgressPage = (function() {
 const App = (function() {
   let isInitialized = false;
 
-  function init() {
+  async function init() {
     if (isInitialized) return;
     
     console.log('🚀 Initializing LinguaDrill...');
@@ -2920,10 +2928,10 @@ const App = (function() {
     // Initialize Navigation (uses AppState)
     Navigation.init();
 
-    // Initialize utilities
-    initUtilities();
+    // Initialize utilities - await to ensure data is loaded before page init
+    await initUtilities();
 
-    // Initialize all pages
+    // Initialize all pages - they will use pre-loaded data from AppState
     initPages();
 
     // Setup global event listeners
@@ -2971,10 +2979,19 @@ const App = (function() {
     }
   }
 
-  function initPages() {
-    // Each page module has its own init() that renders content
-    const pages = ['HomePage', 'WordsPage', 'PatternsPage', 'ShadowingPage', 'ProgressPage'];
-    pages.forEach(pageName => {
+  async function initPages() {
+    // WordsPage needs to wait for data before initializing
+    const pagePromises = [];
+    
+    // WordsPage should initialize after data is loaded
+    if (typeof WordsPage !== 'undefined' && WordsPage.init) {
+      pagePromises.push(
+        WordsPage.init().catch(e => console.error('Failed to init WordsPage:', e))
+      );
+    }
+    
+    // Other pages can initialize in parallel
+    ['HomePage', 'PatternsPage', 'ShadowingPage', 'ProgressPage'].forEach(pageName => {
       if (typeof window[pageName] !== 'undefined' && window[pageName].init) {
         try {
           window[pageName].init();
@@ -2983,6 +3000,9 @@ const App = (function() {
         }
       }
     });
+    
+    // Wait for async page inits to complete
+    await Promise.all(pagePromises);
   }
 
   function setupGlobalListeners() {
