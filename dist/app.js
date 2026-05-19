@@ -751,7 +751,7 @@ const DayLoader = (function() {
   async function loadWeek1() {
     loadingError = null;
     try {
-      const response = await fetch('src/data/week1.json');
+      const response = await fetch('data/week1.json');
       if (!response.ok) {
         throw new Error(`Week 1 data not found (HTTP ${response.status})`);
       }
@@ -781,7 +781,7 @@ const DayLoader = (function() {
     }
     
     try {
-      const response = await fetch(`src/data/day${dayNumber}.json`);
+      const response = await fetch(`data/day${dayNumber}.json`);
       if (!response.ok) {
         throw new Error(`Day ${dayNumber} data not found (HTTP ${response.status})`);
       }
