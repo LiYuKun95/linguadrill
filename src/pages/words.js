@@ -174,6 +174,14 @@ const WordsPage = (function() {
     saveLearnedWords();
     renderWords();
     checkDayCompletion();
+    // Update global stats
+    if (typeof Navigation !== 'undefined' && Navigation.updateGlobalStats) {
+      Navigation.updateGlobalStats();
+    }
+    // Also update home page stats if available
+    if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
+      HomePage.updateStats();
+    }
   }
 
   function checkDayCompletion() {

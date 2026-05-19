@@ -37,102 +37,200 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.5;
   min-height: 100vh;
 }
 
-.navbar {
-  position: fixed;
+/* Compact App Header */
+.app-header {
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
   z-index: 100;
   background: var(--bg-color);
   border-bottom: 1px solid var(--border-color);
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  height: 52px;
 }
 
-.navbar-brand {
+.header-brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.brand-icon {
-  font-size: 1.5rem;
-}
-
-.brand-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--primary-color);
-}
-
-.navbar-links {
-  display: none;
   gap: 0.5rem;
 }
 
-.nav-btn {
-  background: none;
-  border: none;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
+.header-brand .brand-icon {
+  font-size: 1.3rem;
 }
 
-.nav-btn:hover {
-  background-color: var(--bg-secondary);
+.header-brand .brand-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  letter-spacing: -0.3px;
+}
+
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--bg-secondary);
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+}
+
+.stat-pill .stat-emoji {
+  font-size: 0.9rem;
+}
+
+.stat-pill .stat-value {
+  font-weight: 600;
   color: var(--text-primary);
 }
 
-.nav-btn.active {
-  background-color: var(--primary-light);
-  color: var(--primary-color);
-}
-
-.navbar-right {
-  display: flex;
-  align-items: center;
-}
-
-.lang-btn {
-  background: none;
+.lang-toggle {
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  padding: 0.375rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 500;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
+  border-radius: 12px;
+  transition: all 0.15s ease;
 }
 
-.lang-btn:hover {
+.lang-toggle:hover {
   border-color: var(--primary-color);
   color: var(--primary-color);
+  background: var(--primary-light);
 }
 
 main {
-  margin-top: 5rem;
-  min-height: calc(100vh - 5rem - 4rem);
+  margin-top: 0;
+  min-height: calc(100vh - 52px - 64px);
 }
 
 .page {
   display: none;
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .page.active {
   display: block;
+}
+
+.page-header {
+  margin-bottom: 1rem;
+}
+
+.page-header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.page-header p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.day-selector-container {
+  margin-bottom: 0.75rem;
+}
+
+.day-selector {
+  display: flex;
+  overflow-x: auto;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+}
+
+.day-selector::-webkit-scrollbar {
+  display: none;
+}
+
+.day-btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.day-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.day-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* Remove legacy styles that are now in separate files */
+.hero,
+.hero-content,
+.hero-title,
+.hero-subtitle,
+.hero-desc,
+.cta-btn,
+.section-title,
+.philosophy-grid,
+.philosophy-card,
+.philosophy-icon {
+  /* These styles are now in home.css */
+}
+
+.feature-cards,
+.feature-card,
+.feature-icon,
+.stats-section,
+.stat-item,
+.stat-number,
+.stat-label {
+  display: none;
+}
+
+/* Generic button base */
+.btn {
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  font-size: 0.875rem;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
 }
 
 .hero {

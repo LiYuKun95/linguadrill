@@ -1,6 +1,6 @@
 /**
- * Navigation Styles
- * Sticky bottom navigation bar - mobile-first design
+ * Navigation Styles - Compact Mobile-First Design
+ * Modern horizontal bottom navigation bar (Duolingo-style)
  */
 
 /* Bottom Navigation Container */
@@ -11,19 +11,27 @@
   right: 0;
   background: var(--bg-color);
   border-top: 1px solid var(--border-color);
-  padding: 0.5rem 0;
+  padding: 0.25rem 0.5rem;
+  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
   z-index: 1000;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
 }
 
 /* Navigation List */
 .nav-list {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
   max-width: 600px;
   margin: 0 auto;
-  padding: 0 0.5rem;
+  padding: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* Navigation Item */
@@ -32,18 +40,23 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  padding: 0.5rem;
+  gap: 0.2rem;
+  padding: 0.4rem 0.3rem;
   background: none;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 60px;
-  border-radius: var(--radius-md);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1;
+  min-width: 0;
+  border-radius: 12px;
 }
 
 .nav-item:hover {
   background: var(--bg-secondary);
+}
+
+.nav-item:active {
+  transform: scale(0.95);
 }
 
 .nav-item.active {
@@ -51,66 +64,62 @@
 }
 
 .nav-item.active .nav-icon {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 /* Navigation Icon */
 .nav-icon {
-  font-size: 1.5rem;
-  transition: transform 0.2s ease;
+  font-size: 1.35rem;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1;
 }
 
 /* Navigation Label */
 .nav-label {
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 0.65rem;
+  font-weight: 600;
   color: var(--text-secondary);
   white-space: nowrap;
+  letter-spacing: -0.2px;
 }
 
 .nav-item.active .nav-label {
   color: var(--primary-color);
-  font-weight: 600;
-}
-
-/* Safe area for notched phones */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .bottom-nav {
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
-  }
+  font-weight: 700;
 }
 
 /* Add padding to main content to prevent overlap */
 main {
-  padding-bottom: 80px;
+  padding-bottom: 72px;
 }
 
 /* Tablet and Desktop */
 @media (min-width: 768px) {
   .bottom-nav {
-    padding: 0.75rem 0;
+    height: 72px;
+    padding: 0.35rem 0.75rem;
+    padding-bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px));
   }
 
   .nav-list {
-    max-width: 800px;
+    max-width: 700px;
   }
 
   .nav-item {
-    min-width: 80px;
-    padding: 0.75rem 1rem;
-    gap: 0.5rem;
+    padding: 0.5rem 0.4rem;
+    gap: 0.3rem;
   }
 
   .nav-icon {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 
   .nav-label {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
   }
 
   main {
-    padding-bottom: 100px;
+    padding-bottom: 84px;
   }
 }
 

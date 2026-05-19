@@ -18,6 +18,7 @@ const Navigation = (function() {
     renderNavigation();
     setupEventListeners();
     highlightCurrentPage();
+    updateGlobalStats();
   }
 
   function renderNavigation() {
@@ -68,11 +69,25 @@ const Navigation = (function() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // Update global stats
+    updateGlobalStats();
+
     // Refresh page content
     refreshPage(pageId);
 
     // Dispatch navigation event
     window.dispatchEvent(new CustomEvent('pageChange', { detail: { page: pageId } }));
+  }
+
+  function updateGlobalStats() {
+    const learnedWords = Storage.getLearnedWords().length;
+    const streak = Storage.getStreak();
+
+    // Update header stats
+    const headerStreak = document.getElementById('header-streak');
+    const headerLearned = document.getElementById('header-learned');
+    if (headerStreak) headerStreak.textContent = streak;
+    if (headerLearned) headerLearned.textContent = learnedWords;
   }
 
   function highlightCurrentPage() {
