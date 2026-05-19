@@ -28,25 +28,32 @@ const DayLoader = (function() {
   async function loadDay(dayNumber) {
     loadingError = null;
     if (!currentWeek) {
+      console.log(`DayLoader: currentWeek not loaded, loading Week 1 first...`);
       await loadWeek1();
     }
     
     if (currentWeek && currentWeek.days) {
       const dayData = currentWeek.days.find(d => d.day === dayNumber);
       if (dayData) {
+        console.log(`DayLoader: Found Day ${dayNumber} in week data`);
         currentData = dayData;
         currentDay = dayNumber;
         return dayData;
+      } else {
+        console.warn(`DayLoader: Day ${dayNumber} not found in week data, trying individual file...`);
       }
     }
     
+    // Fallback to individual day file
     try {
+      console.log(`DayLoader: Trying to load data/day${dayNumber}.json...`);
       const response = await fetch(`data/day${dayNumber}.json`);
       if (!response.ok) {
         throw new Error(`Day ${dayNumber} data not found (HTTP ${response.status})`);
       }
       currentData = await response.json();
       currentDay = dayNumber;
+      console.log(`DayLoader: Successfully loaded data/day${dayNumber}.json`);
       return currentData;
     } catch (error) {
       console.error(`Failed to load day ${dayNumber}:`, error);

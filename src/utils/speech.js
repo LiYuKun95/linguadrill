@@ -123,7 +123,7 @@ const Speech = (function() {
    * Create utterance with settings
    */
   function createUtterance(text, rate) {
-    const utterance = new (synth.constructor || window.SpeechSynthesisUtterance)(text);
+    const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
     utterance.rate = Math.max(0.5, Math.min(rate, 2));
     utterance.pitch = 1;
@@ -237,7 +237,7 @@ const Speech = (function() {
    * Check if speech is supported
    */
   function isSupported() {
-    return typeof window !== 'undefined' && ('speechSynthesis' in window || !synth);
+    return typeof window !== 'undefined' && 'speechSynthesis' in window;
   }
 
   /**

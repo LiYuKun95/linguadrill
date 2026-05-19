@@ -29,6 +29,11 @@
   align-items: stretch;
 }
 
+/* Default: hide side-nav on mobile/tablet */
+.side-nav {
+  display: none;
+}
+
 /* Navigation List */
 .nav-list {
   display: flex;
