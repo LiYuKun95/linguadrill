@@ -1,18 +1,27 @@
+/**
+ * Home Page Module
+ * Metro Dashboard with learning overview
+ * Uses AppState for global state
+ */
 const HomePage = (function() {
-
-  // Daily goal target
   const DAILY_GOAL = 20;
+  let isInitialized = false;
 
   function init() {
-    const startBtn = document.getElementById('startBtn');
-    if (startBtn) {
-      startBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        navigateTo('words');
-      });
-    }
+    if (isInitialized) return;
+    
+    console.log('🏠 Initializing HomePage...');
+    
+    setupEventListeners();
     updateStats();
     updateGoalProgress();
+    
+    // Listen for state changes
+    AppState.on('learnedWords', updateStats);
+    AppState.on('streak', updateStats);
+    
+    isInitialized = true;
+    console.log('✅ HomePage initialized');
   }
 
   function refresh() {
@@ -21,13 +30,35 @@ const HomePage = (function() {
   }
 
   /**
-   * Update all stat displays across the dashboard
+   * Setup event listeners
+   */
+  function setupEventListeners() {
+    const startBtn = document.getElementById('startBtn');
+    if (startBtn) {
+      startBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        AppState.navigateTo('words');
+      });
+    }
+
+    const continueBtn = document.getElementById('continueBtn');
+    if (continueBtn) {
+      continueBtn.addEventListener('click', () => {
+        AppState.navigateTo('words');
+      });
+    }
+  }
+
+  /**
+   * Update all statistics displays
    */
   function updateStats() {
-    const learnedWords = Storage.getLearnedWords().length;
-    const streak = Storage.getStreak();
-    const drillsCompleted = Storage.getCompletedDrills().length;
-    const shadowingCompleted = Storage.getShadowingSessions().length;
+    const stats = AppState.getStats();
+    const learnedWords = stats.learnedWords;
+    const streak = stats.streak;
+    const patternsCompleted = stats.patternsPracticed;
+    const shadowingCompleted = stats.shadowingCompleted;
+    const totalWords = stats.totalWords || 587;
 
     // Header stats
     const headerStreak = document.getElementById('header-streak');
@@ -35,77 +66,78 @@ const HomePage = (function() {
     if (headerStreak) headerStreak.textContent = streak;
     if (headerLearned) headerLearned.textContent = learnedWords;
 
-    // Quick stats row (Metro pills)
+    // Quick stats row
     const homeWordsCount = document.getElementById('homeWordsCount');
     const homePatternsCount = document.getElementById('homePatternsCount');
     const homeShadowingCount = document.getElementById('homeShadowingCount');
     if (homeWordsCount) homeWordsCount.textContent = learnedWords;
-    if (homePatternsCount) homePatternsCount.textContent = drillsCompleted;
+    if (homePatternsCount) homePatternsCount.textContent = patternsCompleted;
     if (homeShadowingCount) homeShadowingCount.textContent = shadowingCompleted;
 
-    // Streak in progress tile
+    // Streak display
     const homeStreakDisplay = document.getElementById('homeStreakDisplay');
     if (homeStreakDisplay) homeStreakDisplay.textContent = streak + '天';
 
     // Module stats
     const wordsLearned = document.getElementById('wordsLearned');
-    const patternsCompleted = document.getElementById('patternsCompleted');
-    const shadowingComp = document.getElementById('shadowingCompleted');
+    const patternsCompletedEl = document.getElementById('patternsCompleted');
+    const shadowingCompletedEl = document.getElementById('shadowingCompleted');
 
-    if (wordsLearned) wordsLearned.textContent = learnedWords + '/587';
-    if (patternsCompleted) patternsCompleted.textContent = drillsCompleted;
-    if (shadowingComp) shadowingComp.textContent = shadowingCompleted;
+    if (wordsLearned) wordsLearned.textContent = `${learnedWords}/${totalWords}`;
+    if (patternsCompletedEl) patternsCompletedEl.textContent = patternsCompleted;
+    if (shadowingCompletedEl) shadowingCompletedEl.textContent = shadowingCompleted;
 
     // Metro progress rings
-    updateProgressRing('wordsProgress', learnedWords, 587);
-    updateProgressRing('patternsProgress', drillsCompleted, 50);
+    updateProgressRing('wordsProgress', learnedWords, totalWords);
+    updateProgressRing('patternsProgress', patternsCompleted, 50);
     updateProgressRing('shadowingProgress', shadowingCompleted, 50);
     updateProgressRing('progressProgress', streak, 30);
+
+    // Update day badge
+    const currentDay = AppState.get('currentDay') || 1;
+    const homeDayBadge = document.getElementById('homeDayBadge');
+    if (homeDayBadge) homeDayBadge.textContent = `Day ${currentDay}`;
   }
 
   /**
-   * Update a metro progress ring element
-   * @param {string} id - Element ID
-   * @param {number} current - Current value
-   * @param {number} total - Total value
+   * Update a Metro progress ring
    */
   function updateProgressRing(id, current, total) {
     const el = document.getElementById(id);
     if (!el) return;
-    const pct = Math.min((current / total) * 360, 360);
-    const remaining = 360 - pct;
-    el.style.background = `conic-gradient(var(--tile-color, var(--primary-color)) ${pct}deg, var(--border-color) ${pct}deg)`;
-    el.textContent = current > 0 ? Math.round((current / total) * 100) + '%' : '';
+    
+    const pct = Math.min((current / total) * 100, 100);
+    const deg = (pct / 100) * 360;
+    el.style.background = `conic-gradient(var(--primary-color) ${deg}deg, var(--border-color) ${deg}deg)`;
+    el.textContent = current > 0 ? Math.round(pct) + '%' : '';
   }
 
   /**
-   * Update the daily goal progress bar and counter
+   * Update daily goal progress
    */
   function updateGoalProgress() {
-    const learnedWords = Storage.getLearnedWords().length;
+    const stats = AppState.getStats();
+    const todayTotal = stats.learnedWords;
+    const pct = Math.min((todayTotal / DAILY_GOAL) * 100, 100);
+
     const goalCurrent = document.getElementById('goalCurrent');
     const goalTarget = document.getElementById('goalTarget');
     const goalBarFill = document.getElementById('goalBarFill');
     const dailyGoalText = document.getElementById('dailyGoalText');
 
-    const todayTotal = learnedWords; // simplified: use total learned as today's progress
-    const pct = Math.min((todayTotal / DAILY_GOAL) * 100, 100);
-
     if (goalCurrent) goalCurrent.textContent = todayTotal;
     if (goalTarget) goalTarget.textContent = DAILY_GOAL;
     if (goalBarFill) goalBarFill.style.width = pct + '%';
     if (dailyGoalText) {
-      if (pct >= 100) {
-        dailyGoalText.textContent = '🎉 今日目标已完成！';
-      } else {
-        dailyGoalText.textContent = `完成 ${DAILY_GOAL} 个词汇`;
-      }
+      dailyGoalText.textContent = pct >= 100 
+        ? '🎉 今日目标已完成！' 
+        : `完成 ${DAILY_GOAL} 个词汇`;
     }
   }
 
   return {
-    init: init,
-    refresh: refresh,
-    updateStats: updateStats
+    init,
+    refresh,
+    updateStats
   };
 })();

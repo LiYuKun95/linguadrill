@@ -1,6 +1,7 @@
 /**
  * Shadowing Module
  * Train listening rhythm and speaking rhythm with play/pause and "Your Turn" indicator
+ * Uses AppState for global state management
  */
 const ShadowingPage = (function() {
   let shadowingData = [];
@@ -11,8 +12,13 @@ const ShadowingPage = (function() {
   let currentDay = 1;
   let availableDays = [];
   let completedShadowing = new Set();
+  let isInitialized = false;
 
   async function init() {
+    if (isInitialized) return;
+    
+    console.log('🎤 Initializing ShadowingPage...');
+    
     await loadWeekData();
     loadCompletedShadowing();
     setupEventListeners();
@@ -20,10 +26,14 @@ const ShadowingPage = (function() {
     await loadDay(1);
     renderSentenceList();
     renderPlayer();
+    
+    isInitialized = true;
+    console.log('✅ ShadowingPage initialized');
   }
 
   async function loadWeekData() {
-    const weekData = await DayLoader.loadWeek1();
+    const weekData = AppState.get('weekData');
+    
     if (weekData && weekData.days) {
       availableDays = weekData.days.map(d => ({
         day: d.day,
@@ -31,6 +41,17 @@ const ShadowingPage = (function() {
         titleCn: d.titleCn,
         titleEn: d.titleEn
       }));
+    } else {
+      const data = await DayLoader.loadWeek1();
+      if (data && data.days) {
+        AppState.setWeekData(data);
+        availableDays = data.days.map(d => ({
+          day: d.day,
+          title: d.title,
+          titleCn: d.titleCn,
+          titleEn: d.titleEn
+        }));
+      }
     }
     renderDaySelector();
   }
@@ -63,6 +84,11 @@ const ShadowingPage = (function() {
     const container = document.getElementById('shadowingDaySelector');
     if (!container) return;
 
+    if (availableDays.length === 0) {
+      container.innerHTML = '<span class="loading-text">加载中...</span>';
+      return;
+    }
+
     container.innerHTML = availableDays.map(day => {
       const isActive = day.day === currentDay;
       const isUnlocked = DayLoader.isDayUnlocked(day.day);
@@ -83,14 +109,22 @@ const ShadowingPage = (function() {
   }
 
   function loadCompletedShadowing() {
-    const saved = localStorage.getItem('linguadrill_completed_shadowing');
-    if (saved) {
-      completedShadowing = new Set(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem('linguadrill_completed_shadowing');
+      if (saved) {
+        completedShadowing = new Set(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Failed to load shadowing progress:', e);
     }
   }
 
   function saveCompletedShadowing() {
-    localStorage.setItem('linguadrill_completed_shadowing', JSON.stringify([...completedShadowing]));
+    try {
+      localStorage.setItem('linguadrill_completed_shadowing', JSON.stringify([...completedShadowing]));
+    } catch (e) {
+      console.error('Failed to save shadowing progress:', e);
+    }
   }
 
   function setupEventListeners() {
@@ -100,7 +134,9 @@ const ShadowingPage = (function() {
       speedSlider.addEventListener('input', (e) => {
         currentSpeed = parseFloat(e.target.value);
         if (speedValue) speedValue.textContent = `${currentSpeed.toFixed(1)}x`;
-        Speech.setRate(currentSpeed);
+        if (typeof Speech !== 'undefined') {
+          Speech.setRate(currentSpeed);
+        }
       });
     }
 
@@ -113,6 +149,20 @@ const ShadowingPage = (function() {
     if (replayBtn) replayBtn.addEventListener('click', replayCurrent);
     if (nextBtn) nextBtn.addEventListener('click', nextSentence);
     if (prevBtn) prevBtn.addEventListener('click', prevSentence);
+
+    // Listen for week data updates
+    AppState.on('weekData', (data) => {
+      if (data && data.days) {
+        availableDays = data.days.map(d => ({
+          day: d.day,
+          title: d.title,
+          titleCn: d.titleCn,
+          titleEn: d.titleEn
+        }));
+        renderDaySelector();
+        updateDayTitle();
+      }
+    });
   }
 
   function renderSentenceList() {
@@ -120,12 +170,12 @@ const ShadowingPage = (function() {
     if (!container) return;
 
     if (shadowingData.length === 0) {
-      container.innerHTML = '<div class="empty-state">🎧 No sentences loaded. Please select a day.</div>';
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🎧</div><p>暂无跟读数据</p></div>';
       return;
     }
 
     container.innerHTML = shadowingData.map((item, index) => {
-      const key = `${currentDay}_${item.id}`;
+      const key = `${currentDay}_${item.id || index}`;
       const isCompleted = completedShadowing.has(key);
       return `
         <div class="shadowing-item ${index === currentIndex ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
@@ -133,11 +183,11 @@ const ShadowingPage = (function() {
              onclick="ShadowingPage.selectSentence(${index})">
           <div class="shadowing-number">${index + 1}</div>
           <div class="shadowing-content">
-            <div class="shadowing-sentence">${item.sentence}</div>
-            <div class="shadowing-translation">${item.translation}</div>
+            <div class="shadowing-sentence">${item.sentence || item.text || ''}</div>
+            <div class="shadowing-translation">${item.translation || ''}</div>
           </div>
           <div class="shadowing-status">
-            ${isCompleted ? '✅' : item.difficulty === 'easy' ? '🟢' : '🟡'}
+            ${isCompleted ? '✅' : (item.difficulty === 'easy' ? '🟢' : '🟡')}
           </div>
         </div>
       `;
@@ -146,19 +196,25 @@ const ShadowingPage = (function() {
 
   function renderPlayer() {
     const currentItem = shadowingData[currentIndex];
-    if (!currentItem) return;
-
+    
     const sentenceDisplay = document.getElementById('shadowingSentenceDisplay');
     const translationDisplay = document.getElementById('shadowingTranslationDisplay');
     const yourTurnIndicator = document.getElementById('yourTurnIndicator');
     const progressDisplay = document.getElementById('shadowingProgress');
 
+    if (!currentItem) {
+      if (sentenceDisplay) sentenceDisplay.textContent = '选择一个句子开始跟读';
+      if (translationDisplay) translationDisplay.textContent = '';
+      if (progressDisplay) progressDisplay.textContent = '0 / 0';
+      return;
+    }
+
     if (sentenceDisplay) {
-      sentenceDisplay.textContent = currentItem.sentence;
+      sentenceDisplay.textContent = currentItem.sentence || currentItem.text || '';
     }
 
     if (translationDisplay) {
-      translationDisplay.textContent = currentItem.translation;
+      translationDisplay.textContent = currentItem.translation || '';
     }
 
     if (yourTurnIndicator) {
@@ -186,15 +242,16 @@ const ShadowingPage = (function() {
 
   function playCurrent() {
     const currentItem = shadowingData[currentIndex];
-    if (!currentItem) return;
+    if (!currentItem || typeof Speech === 'undefined') return;
 
     isPlaying = true;
     isPausedForUser = false;
     renderPlayer();
 
-    const duration = (currentItem.sentence.length * 80) / currentSpeed;
+    const text = currentItem.sentence || currentItem.text || '';
+    const duration = (text.length * 80) / currentSpeed;
 
-    Speech.speak(currentItem.sentence, currentSpeed);
+    Speech.speak(text, currentSpeed);
 
     setTimeout(() => {
       isPausedForUser = true;
@@ -203,13 +260,20 @@ const ShadowingPage = (function() {
       markCurrentCompleted();
     }, duration);
 
+    // Update stats via AppState
+    AppState.incrementShadowing(1);
     Storage.incrementShadowingCompleted();
+
+    // Update HomePage if available
+    if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
+      HomePage.updateStats();
+    }
   }
 
   function markCurrentCompleted() {
     const currentItem = shadowingData[currentIndex];
     if (currentItem) {
-      const key = `${currentDay}_${currentItem.id}`;
+      const key = `${currentDay}_${currentItem.id || currentIndex}`;
       completedShadowing.add(key);
       saveCompletedShadowing();
       renderSentenceList();
@@ -219,10 +283,11 @@ const ShadowingPage = (function() {
 
   function checkDayCompletion() {
     const dayShadowingCount = shadowingData.length;
-    const completedToday = shadowingData.filter(s => completedShadowing.has(`${currentDay}_${s.id}`)).length;
+    const completedToday = shadowingData.filter(s => completedShadowing.has(`${currentDay}_${s.id || shadowingData.indexOf(s)}`)).length;
     
-    if (completedToday >= dayShadowingCount * 0.8) {
+    if (dayShadowingCount > 0 && completedToday >= dayShadowingCount * 0.8) {
       DayLoader.markDayCompleted(currentDay);
+      console.log(`🎉 Day ${currentDay} shadowing completed!`);
     }
   }
 

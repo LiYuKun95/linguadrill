@@ -16,6 +16,7 @@ const jsFiles = [
   'src/utils/storage.js',
   'src/utils/speech.js',
   'src/utils/dayLoader.js',
+  'src/utils/appState.js',  // 全局状态管理（先于其他模块加载）
   'src/utils/patternEngine.js',
   'src/components/navigation.js',
   'src/pages/home.js',

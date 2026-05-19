@@ -1,6 +1,7 @@
 /**
  * Pattern Drill Module
  * Interactive pattern training with auto sentence generation and speech playback
+ * Uses AppState for global state management
  */
 const PatternsPage = (function() {
   let currentSpeed = 1;
@@ -9,18 +10,27 @@ const PatternsPage = (function() {
   let isAutoPlay = false;
   let currentDay = 1;
   let availableDays = [];
+  let isInitialized = false;
 
   async function init() {
+    if (isInitialized) return;
+    
+    console.log('🔄 Initializing PatternsPage...');
+    
     await loadWeekData();
     setupEventListeners();
     renderDaySelector();
     await loadDay(1);
     renderPatternList();
     generateNewSentence();
+    
+    isInitialized = true;
+    console.log('✅ PatternsPage initialized');
   }
 
   async function loadWeekData() {
-    const weekData = await DayLoader.loadWeek1();
+    const weekData = AppState.get('weekData');
+    
     if (weekData && weekData.days) {
       availableDays = weekData.days.map(d => ({
         day: d.day,
@@ -28,6 +38,17 @@ const PatternsPage = (function() {
         titleCn: d.titleCn,
         titleEn: d.titleEn
       }));
+    } else {
+      const data = await DayLoader.loadWeek1();
+      if (data && data.days) {
+        AppState.setWeekData(data);
+        availableDays = data.days.map(d => ({
+          day: d.day,
+          title: d.title,
+          titleCn: d.titleCn,
+          titleEn: d.titleEn
+        }));
+      }
     }
     renderDaySelector();
   }
@@ -57,6 +78,11 @@ const PatternsPage = (function() {
     const container = document.getElementById('patternsDaySelector');
     if (!container) return;
 
+    if (availableDays.length === 0) {
+      container.innerHTML = '<span class="loading-text">加载中...</span>';
+      return;
+    }
+
     container.innerHTML = availableDays.map(day => {
       const isActive = day.day === currentDay;
       const isUnlocked = DayLoader.isDayUnlocked(day.day);
@@ -83,7 +109,9 @@ const PatternsPage = (function() {
       speedSlider.addEventListener('input', (e) => {
         currentSpeed = parseFloat(e.target.value);
         if (speedValue) speedValue.textContent = `${currentSpeed.toFixed(1)}x`;
-        Speech.setRate(currentSpeed);
+        if (typeof Speech !== 'undefined') {
+          Speech.setRate(currentSpeed);
+        }
       });
     }
 
@@ -101,6 +129,20 @@ const PatternsPage = (function() {
     if (autoPlayBtn) {
       autoPlayBtn.addEventListener('click', toggleAutoPlay);
     }
+
+    // Listen for week data updates
+    AppState.on('weekData', (data) => {
+      if (data && data.days) {
+        availableDays = data.days.map(d => ({
+          day: d.day,
+          title: d.title,
+          titleCn: d.titleCn,
+          titleEn: d.titleEn
+        }));
+        renderDaySelector();
+        updateDayTitle();
+      }
+    });
   }
 
   function renderPatternList() {
@@ -109,7 +151,7 @@ const PatternsPage = (function() {
 
     const patterns = PatternEngine.getAllPatterns();
     if (patterns.length === 0) {
-      container.innerHTML = '<div class="empty-state">📝 No patterns loaded. Please select a day.</div>';
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><p>暂无句型数据</p></div>';
       return;
     }
 
@@ -131,7 +173,13 @@ const PatternsPage = (function() {
 
   function generateNewSentence() {
     const result = PatternEngine.generateSentence();
-    if (!result) return;
+    if (!result) {
+      const sentenceDisplay = document.getElementById('sentenceDisplay');
+      if (sentenceDisplay) {
+        sentenceDisplay.textContent = '点击"生成句子"开始练习';
+      }
+      return;
+    }
 
     currentSentence = result.sentence;
     currentPattern = result.template;
@@ -150,7 +198,14 @@ const PatternsPage = (function() {
       templateDisplay.textContent = `模板: ${currentPattern}`;
     }
 
+    // Update stats via AppState
+    AppState.incrementPatterns(1);
     Storage.incrementPatternsPracticed();
+
+    // Update HomePage if available
+    if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
+      HomePage.updateStats();
+    }
 
     if (isAutoPlay) {
       setTimeout(() => playCurrentSentence(), 500);
@@ -158,7 +213,7 @@ const PatternsPage = (function() {
   }
 
   function playCurrentSentence() {
-    if (!currentSentence) return;
+    if (!currentSentence || typeof Speech === 'undefined') return;
     Speech.speak(currentSentence, currentSpeed);
   }
 

@@ -1,82 +1,124 @@
 /**
  * LinguaDrill Main Application
- * Initialize and coordinate all modules
+ * Thin coordinator using AppState as single source of truth
  */
 const App = (function() {
-  let currentPage = 'home';
+  let isInitialized = false;
 
   function init() {
-    initUtilities();
+    if (isInitialized) return;
+    
+    console.log('🚀 Initializing LinguaDrill...');
+
+    // Initialize AppState first (this loads persisted state)
+    AppState.init();
+
+    // Initialize Navigation (uses AppState)
     Navigation.init();
+
+    // Initialize utilities
+    initUtilities();
+
+    // Initialize all pages
     initPages();
-    setupEventListeners();
-    I18n.translatePage();
+
+    // Setup global event listeners
+    setupGlobalListeners();
+
+    // Translate UI
+    if (typeof I18n !== 'undefined') {
+      I18n.translatePage();
+    }
+
+    isInitialized = true;
     console.log('🎯 LinguaDrill initialized successfully!');
   }
 
   function initUtilities() {
+    // Load speech settings
     const settings = Storage.getSettings();
-    if (settings.speechRate) {
+    if (settings.speechRate && typeof Speech !== 'undefined') {
       Speech.setRate(settings.speechRate);
     }
-    DayLoader.loadWeek1();
+
+    // Pre-load week data
+    loadWeekData();
+  }
+
+  async function loadWeekData() {
+    console.log('📚 Loading week data...');
+    try {
+      const weekData = await DayLoader.loadWeek1();
+      if (weekData) {
+        AppState.setWeekData(weekData);
+        console.log('✅ Week data loaded:', {
+          days: weekData.days?.length,
+          totalWords: weekData.days?.reduce((sum, d) => sum + (d.words?.length || 0), 0)
+        });
+        
+        // Notify pages that data is ready
+        if (typeof WordsPage !== 'undefined' && WordsPage.onDataReady) {
+          WordsPage.onDataReady(weekData);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to load week data:', error);
+      AppState.set('error', error.message);
+    }
   }
 
   function initPages() {
-    if (typeof HomePage !== 'undefined') {
-      HomePage.init();
-    }
-    if (typeof WordsPage !== 'undefined') {
-      WordsPage.init();
-    }
-    if (typeof PatternsPage !== 'undefined') {
-      PatternsPage.init();
-    }
-    if (typeof ShadowingPage !== 'undefined') {
-      ShadowingPage.init();
-    }
-    if (typeof ProgressPage !== 'undefined') {
-      ProgressPage.init();
-    }
+    // Each page module has its own init() that renders content
+    const pages = ['HomePage', 'WordsPage', 'PatternsPage', 'ShadowingPage', 'ProgressPage'];
+    pages.forEach(pageName => {
+      if (typeof window[pageName] !== 'undefined' && window[pageName].init) {
+        try {
+          window[pageName].init();
+        } catch (e) {
+          console.error(`Failed to init ${pageName}:`, e);
+        }
+      }
+    });
   }
 
-  function setupEventListeners() {
+  function setupGlobalListeners() {
+    // Language toggle
     const langToggle = document.getElementById('langToggle');
     if (langToggle) {
-      langToggle.addEventListener('click', toggleLanguage);
-    }
-
-    const startBtn = document.getElementById('startBtn');
-    if (startBtn) {
-      startBtn.addEventListener('click', () => {
-        Navigation.navigateTo('words');
+      langToggle.addEventListener('click', () => {
+        if (typeof I18n !== 'undefined') {
+          const currentLang = I18n.getLanguage();
+          const newLang = currentLang === 'zh' ? 'en' : 'zh';
+          I18n.setLanguage(newLang);
+          I18n.translatePage();
+          updateLangToggleText();
+        }
       });
     }
 
-    const continueBtn = document.getElementById('continueBtn');
-    if (continueBtn) {
-      continueBtn.addEventListener('click', () => {
-        Navigation.navigateTo('words');
-      });
-    }
-
-    window.addEventListener('pageChange', (e) => {
-      currentPage = e.detail.page;
-      onPageChange(currentPage);
+    // Global keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // ESC to go home
+      if (e.key === 'Escape') {
+        navigateTo('home');
+      }
+      // Space to toggle play (when on words page)
+      if (e.key === ' ' && AppState.get('currentPage') === 'words') {
+        e.preventDefault();
+        if (typeof WordsPage !== 'undefined' && WordsPage.playCurrentWord) {
+          WordsPage.playCurrentWord();
+        }
+      }
     });
 
-    window.addEventListener('languageChange', () => {
-      I18n.translatePage();
-      updateLangToggle();
-      refreshCurrentPage();
-    });
-
+    // Pause speech on visibility change
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
+      if (document.hidden && typeof Speech !== 'undefined') {
         Speech.pause();
       }
     });
 
+    // Prevent double-tap zoom on mobile
     let lastTouchEnd = 0;
     document.addEventListener('touchend', (e) => {
       const now = Date.now();
@@ -85,72 +127,61 @@ const App = (function() {
       }
       lastTouchEnd = now;
     }, false);
+
+    // Handle page visibility
+    AppState.on('currentPage', (pageId) => {
+      Storage.updateStreak();
+      updateHeaderStats();
+    });
+  }
+
+  function navigateTo(pageId) {
+    AppState.navigateTo(pageId);
+  }
+
+  function updateLangToggleText() {
+    const langToggle = document.getElementById('langToggle');
+    if (langToggle && typeof I18n !== 'undefined') {
+      const span = langToggle.querySelector('span');
+      if (span) {
+        span.textContent = I18n.getLanguage() === 'zh' ? 'English' : '中文';
+      }
+    }
+  }
+
+  function updateHeaderStats() {
+    const stats = AppState.getStats();
+    const headerStreak = document.getElementById('header-streak');
+    const headerLearned = document.getElementById('header-learned');
+    
+    if (headerStreak) headerStreak.textContent = stats.streak;
+    if (headerLearned) headerLearned.textContent = stats.learnedWords;
   }
 
   function toggleLanguage() {
-    const currentLang = I18n.getLanguage();
-    const newLang = currentLang === 'zh' ? 'en' : 'zh';
-    I18n.setLanguage(newLang);
-    Navigation.setLanguage(newLang === 'en');
-  }
-
-  function updateLangToggle() {
-    const langToggle = document.getElementById('langToggle');
-    if (langToggle) {
+    if (typeof I18n !== 'undefined') {
       const currentLang = I18n.getLanguage();
-      langToggle.querySelector('span').textContent = currentLang === 'zh' ? 'English' : '中文';
+      const newLang = currentLang === 'zh' ? 'en' : 'zh';
+      I18n.setLanguage(newLang);
+      I18n.translatePage();
+      updateLangToggleText();
     }
   }
 
-  function refreshCurrentPage() {
-    switch(currentPage) {
-      case 'words':
-        if (typeof WordsPage !== 'undefined') WordsPage.refresh();
-        break;
-      case 'patterns':
-        if (typeof PatternsPage !== 'undefined') PatternsPage.refresh();
-        break;
-      case 'shadowing':
-        if (typeof ShadowingPage !== 'undefined') ShadowingPage.refresh();
-        break;
-      case 'progress':
-        if (typeof ProgressPage !== 'undefined') ProgressPage.refresh();
-        break;
-    }
-  }
-
-  function onPageChange(page) {
-    localStorage.setItem('linguadrill_last_page', page);
-    
-    switch(page) {
-      case 'words':
-        if (typeof WordsPage !== 'undefined') WordsPage.refresh();
-        break;
-      case 'patterns':
-        if (typeof PatternsPage !== 'undefined') PatternsPage.refresh();
-        break;
-      case 'shadowing':
-        if (typeof ShadowingPage !== 'undefined') ShadowingPage.refresh();
-        break;
-      case 'progress':
-        if (typeof ProgressPage !== 'undefined') ProgressPage.refresh();
-        break;
-    }
-
-    Storage.updateStreak();
-  }
-
-  function getCurrentPage() {
-    return currentPage;
-  }
-
+  // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
 
+  // Public API
   return {
-    getCurrentPage
+    navigateTo,
+    toggleLanguage,
+    refreshCurrentPage: () => AppState.refreshPage(AppState.get('currentPage'))
   };
 })();
+
+// Expose App globally
+window.App = App;

@@ -1,28 +1,47 @@
 /**
  * Learning Progress System
- * Track and display learning progress using LocalStorage
+ * Track and display learning progress using AppState and LocalStorage
  */
 const ProgressPage = (function() {
+  let isInitialized = false;
+
   function init() {
+    if (isInitialized) return;
+    
+    console.log('📊 Initializing ProgressPage...');
+    
     updateProgressDisplay();
     renderHistory();
     renderAchievements();
+    
+    // Listen for state changes
+    AppState.on('learnedWords', updateProgressDisplay);
+    AppState.on('patternsPracticed', updateProgressDisplay);
+    AppState.on('shadowingCompleted', updateProgressDisplay);
+    AppState.on('streak', updateProgressDisplay);
+    
+    isInitialized = true;
+    console.log('✅ ProgressPage initialized');
   }
 
   function updateProgressDisplay() {
+    const stats = AppState.getStats();
     const progress = Storage.getProgress();
     const streak = Storage.getStreak();
 
     // Update main stats
-    updateStat('wordsLearned', progress.wordsLearned);
-    updateStat('patternsPracticed', progress.patternsPracticed);
-    updateStat('shadowingCompleted', progress.shadowingCompleted);
+    updateStat('wordsLearned', stats.learnedWords);
+    updateStat('patternsPracticed', stats.patternsPracticed);
+    updateStat('shadowingCompleted', stats.shadowingCompleted);
     updateStat('streakCount', streak.current);
 
     // Update progress bars
-    updateProgressBar('wordsProgress', progress.wordsLearned, progress.totalWords || 20);
-    updateProgressBar('patternsProgress', progress.patternsPracticed, progress.totalPatterns || 8);
-    updateProgressBar('shadowingProgress', progress.shadowingCompleted, progress.totalShadowing || 10);
+    const totalWords = progress.totalWords || stats.totalWords || 587;
+    const wordsTarget = Math.max(20, totalWords);
+    
+    updateProgressBar('wordsProgress', stats.learnedWords, wordsTarget);
+    updateProgressBar('patternsProgress', stats.patternsPracticed, 50);
+    updateProgressBar('shadowingProgress', stats.shadowingCompleted, 50);
   }
 
   function updateStat(elementId, value) {
@@ -103,7 +122,7 @@ const ProgressPage = (function() {
     const container = document.getElementById('achievementsList');
     if (!container) return;
 
-    const progress = Storage.getProgress();
+    const stats = AppState.getStats();
     const streak = Storage.getStreak();
 
     const achievements = [
@@ -112,28 +131,35 @@ const ProgressPage = (function() {
         icon: '🎯',
         title: '初次学习',
         description: '学习第一个单词',
-        unlocked: progress.wordsLearned >= 1
+        unlocked: stats.learnedWords >= 1
       },
       {
         id: 'word_master',
         icon: '📚',
         title: '词汇达人',
         description: '学习10个单词',
-        unlocked: progress.wordsLearned >= 10
+        unlocked: stats.learnedWords >= 10
+      },
+      {
+        id: 'word_expert',
+        icon: '📖',
+        title: '词汇专家',
+        description: '学习50个单词',
+        unlocked: stats.learnedWords >= 50
       },
       {
         id: 'pattern_pro',
         icon: '🔄',
         title: '句型高手',
         description: '完成10次句型练习',
-        unlocked: progress.patternsPracticed >= 10
+        unlocked: stats.patternsPracticed >= 10
       },
       {
         id: 'shadowing_star',
         icon: '🎤',
         title: '跟读之星',
         description: '完成5次跟读练习',
-        unlocked: progress.shadowingCompleted >= 5
+        unlocked: stats.shadowingCompleted >= 5
       },
       {
         id: 'streak_3',
@@ -148,6 +174,13 @@ const ProgressPage = (function() {
         title: '连续7天',
         description: '连续学习7天',
         unlocked: streak.current >= 7
+      },
+      {
+        id: 'streak_30',
+        icon: '💎',
+        title: '坚持30天',
+        description: '连续学习30天',
+        unlocked: streak.current >= 30
       }
     ];
 

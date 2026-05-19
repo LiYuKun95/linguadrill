@@ -898,6 +898,417 @@ const DayLoader = (function() {
 })();
 
 
+/* === src/utils/appState.js === */
+/**
+ * AppState - Centralized Global State Management
+ * Single source of truth for all application state
+ */
+const AppState = (function() {
+  // Private state
+  let state = {
+    currentPage: 'home',
+    currentDay: 1,
+    weekData: null,
+    dayData: null,
+    learnedWords: new Set(),
+    streak: 0,
+    lastDate: null,
+    wordsLearned: 0,
+    patternsPracticed: 0,
+    shadowingCompleted: 0,
+    isLoading: false,
+    error: null
+  };
+
+  // Listeners for state changes
+  const listeners = {};
+
+  /**
+   * Subscribe to state changes
+   */
+  function on(key, callback) {
+    if (!listeners[key]) listeners[key] = [];
+    listeners[key].push(callback);
+    return () => {
+      listeners[key] = listeners[key].filter(cb => cb !== callback);
+    };
+  }
+
+  /**
+   * Emit state change event
+   */
+  function emit(key, value) {
+    if (listeners[key]) {
+      listeners[key].forEach(cb => cb(value));
+    }
+    // Also emit '*' for general updates
+    if (listeners['*']) {
+      listeners['*'].forEach(cb => cb({ key, value, state }));
+    }
+  }
+
+  /**
+   * Get a value from state
+   */
+  function get(key) {
+    return key ? state[key] : { ...state };
+  }
+
+  /**
+   * Set a value in state and notify listeners
+   */
+  function set(key, value) {
+    const oldValue = state[key];
+    state[key] = value;
+    emit(key, value);
+    saveToStorage();
+  }
+
+  /**
+   * Initialize state from localStorage
+   */
+  function init() {
+    loadFromStorage();
+    
+    // Also load learned words from localStorage
+    try {
+      const saved = localStorage.getItem('linguadrill_learned_words');
+      if (saved) {
+        state.learnedWords = new Set(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Failed to load learned words:', e);
+    }
+
+    // Load streak data
+    try {
+      const streakData = localStorage.getItem('linguadrill_streak');
+      if (streakData) {
+        const parsed = JSON.parse(streakData);
+        state.streak = parsed.current || 0;
+        state.lastDate = parsed.lastDate;
+      }
+    } catch (e) {
+      console.error('Failed to load streak:', e);
+    }
+
+    // Load progress data
+    try {
+      const progressData = localStorage.getItem('linguadrill_progress');
+      if (progressData) {
+        const parsed = JSON.parse(progressData);
+        state.wordsLearned = parsed.wordsLearned || 0;
+        state.patternsPracticed = parsed.patternsPracticed || 0;
+        state.shadowingCompleted = parsed.shadowingCompleted || 0;
+      }
+    } catch (e) {
+      console.error('Failed to load progress:', e);
+    }
+
+    // Check and update streak
+    updateStreak();
+
+    console.log('📊 AppState initialized:', {
+      learnedWords: state.learnedWords.size,
+      streak: state.streak,
+      wordsLearned: state.wordsLearned
+    });
+  }
+
+  /**
+   * Update streak based on current date
+   */
+  function updateStreak() {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    if (state.lastDate === todayStr) {
+      // Already updated today
+      return;
+    } else if (state.lastDate === yesterdayStr) {
+      // Consecutive day
+      state.streak++;
+    } else {
+      // Streak broken or first day
+      state.streak = Math.max(1, state.streak);
+    }
+
+    state.lastDate = todayStr;
+    saveToStorage();
+    emit('streak', state.streak);
+  }
+
+  /**
+   * Mark a word as learned
+   */
+  function markWordLearned(day, word) {
+    const key = `${day}_${word}`;
+    state.learnedWords.add(key);
+    state.wordsLearned++;
+    saveLearnedWords();
+    saveToStorage();
+    emit('learnedWords', state.learnedWords);
+    emit('wordsLearned', state.wordsLearned);
+    return true;
+  }
+
+  /**
+   * Unmark a word as learned
+   */
+  function unmarkWordLearned(day, word) {
+    const key = `${day}_${word}`;
+    state.learnedWords.delete(key);
+    state.wordsLearned = Math.max(0, state.wordsLearned - 1);
+    saveLearnedWords();
+    saveToStorage();
+    emit('learnedWords', state.learnedWords);
+    emit('wordsLearned', state.wordsLearned);
+    return true;
+  }
+
+  /**
+   * Check if a word is learned
+   */
+  function isWordLearned(day, word) {
+    return state.learnedWords.has(`${day}_${word}`);
+  }
+
+  /**
+   * Get learned words for a specific day
+   */
+  function getDayLearnedWords(day) {
+    return [...state.learnedWords]
+      .filter(key => key.startsWith(`${day}_`))
+      .map(key => key.split('_')[1]);
+  }
+
+  /**
+   * Increment patterns practiced
+   */
+  function incrementPatterns(count = 1) {
+    state.patternsPracticed += count;
+    saveToStorage();
+    emit('patternsPracticed', state.patternsPracticed);
+  }
+
+  /**
+   * Increment shadowing completed
+   */
+  function incrementShadowing(count = 1) {
+    state.shadowingCompleted += count;
+    saveToStorage();
+    emit('shadowingCompleted', state.shadowingCompleted);
+  }
+
+  /**
+   * Set week data (from DayLoader)
+   */
+  function setWeekData(data) {
+    state.weekData = data;
+    emit('weekData', data);
+  }
+
+  /**
+   * Set current day data
+   */
+  function setDayData(data) {
+    state.dayData = data;
+    state.currentDay = data?.day || state.currentDay;
+    emit('dayData', data);
+    emit('currentDay', state.currentDay);
+  }
+
+  /**
+   * Navigate to a page
+   */
+  function navigateTo(pageId) {
+    if (state.currentPage === pageId) return;
+    state.currentPage = pageId;
+    emit('currentPage', pageId);
+    handlePageNavigation(pageId);
+  }
+
+  /**
+   * Handle page navigation DOM updates
+   */
+  function handlePageNavigation(pageId) {
+    // Hide all pages
+    document.querySelectorAll('.page').forEach(page => {
+      page.classList.remove('active');
+    });
+
+    // Show target page
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+      targetPage.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Update all nav items
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.toggle('active', item.getAttribute('data-page') === pageId);
+    });
+
+    // Update header stats
+    updateHeaderStats();
+
+    // Trigger page-specific refresh
+    refreshPage(pageId);
+
+    // Save last page
+    localStorage.setItem('linguadrill_last_page', pageId);
+  }
+
+  /**
+   * Refresh page content
+   */
+  function refreshPage(pageId) {
+    switch (pageId) {
+      case 'home':
+        if (typeof HomePage !== 'undefined' && HomePage.refresh) {
+          HomePage.refresh();
+        }
+        break;
+      case 'words':
+        if (typeof WordsPage !== 'undefined' && WordsPage.refresh) {
+          WordsPage.refresh();
+        }
+        break;
+      case 'patterns':
+        if (typeof PatternsPage !== 'undefined' && PatternsPage.refresh) {
+          PatternsPage.refresh();
+        }
+        break;
+      case 'shadowing':
+        if (typeof ShadowingPage !== 'undefined' && ShadowingPage.refresh) {
+          ShadowingPage.refresh();
+        }
+        break;
+      case 'progress':
+        if (typeof ProgressPage !== 'undefined' && ProgressPage.refresh) {
+          ProgressPage.refresh();
+        }
+        break;
+    }
+  }
+
+  /**
+   * Update header statistics
+   */
+  function updateHeaderStats() {
+    const headerStreak = document.getElementById('header-streak');
+    const headerLearned = document.getElementById('header-learned');
+    
+    if (headerStreak) headerStreak.textContent = state.streak;
+    if (headerLearned) headerLearned.textContent = state.learnedWords.size;
+  }
+
+  /**
+   * Save learned words to localStorage
+   */
+  function saveLearnedWords() {
+    try {
+      localStorage.setItem('linguadrill_learned_words', 
+        JSON.stringify([...state.learnedWords]));
+    } catch (e) {
+      console.error('Failed to save learned words:', e);
+    }
+  }
+
+  /**
+   * Save state to localStorage
+   */
+  function saveToStorage() {
+    try {
+      const progress = {
+        wordsLearned: state.wordsLearned,
+        patternsPracticed: state.patternsPracticed,
+        shadowingCompleted: state.shadowingCompleted,
+        currentStreak: state.streak
+      };
+      localStorage.setItem('linguadrill_progress', JSON.stringify(progress));
+
+      const streak = {
+        current: state.streak,
+        lastDate: state.lastDate
+      };
+      localStorage.setItem('linguadrill_streak', JSON.stringify(streak));
+    } catch (e) {
+      console.error('Failed to save state:', e);
+    }
+  }
+
+  /**
+   * Load state from localStorage
+   */
+  function loadFromStorage() {
+    try {
+      const lastPage = localStorage.getItem('linguadrill_last_page');
+      if (lastPage) {
+        state.currentPage = lastPage;
+      }
+    } catch (e) {
+      console.error('Failed to load last page:', e);
+    }
+  }
+
+  /**
+   * Get summary stats for dashboard
+   */
+  function getStats() {
+    return {
+      learnedWords: state.learnedWords.size,
+      streak: state.streak,
+      patternsPracticed: state.patternsPracticed,
+      shadowingCompleted: state.shadowingCompleted,
+      totalWords: state.weekData?.days?.reduce((sum, d) => sum + (d.words?.length || 0), 0) || 0
+    };
+  }
+
+  // Initialize on load
+  init();
+
+  // Return public API
+  return {
+    // Getters
+    get,
+    getStats,
+    isWordLearned,
+    getDayLearnedWords,
+    
+    // Setters
+    set,
+    setWeekData,
+    setDayData,
+    navigateTo,
+    markWordLearned,
+    unmarkWordLearned,
+    incrementPatterns,
+    incrementShadowing,
+    
+    // Event handling
+    on,
+    
+    // Utility
+    init,
+    refreshPage,
+    updateHeaderStats,
+    updateStreak
+  };
+})();
+
+// Expose navigateTo globally for onclick handlers
+window.navigateTo = function(pageId) {
+  AppState.navigateTo(pageId);
+};
+
+// Expose AppState globally
+window.AppState = AppState;
+
+
 /* === src/utils/patternEngine.js === */
 /**
  * Pattern Drill Engine
@@ -1041,25 +1452,18 @@ const PatternEngine = (function() {
 /**
  * Navigation System
  * Metro-inspired floating bottom dock + desktop side nav
- * Syncs active state across both navigation modes
+ * Uses AppState as single source of truth
  */
 const Navigation = (function() {
-  const navItems = [
-    { id: 'home', icon: '🏠', label: '首页', labelEn: 'Home' },
-    { id: 'words', icon: '📚', label: '高频词汇', labelEn: 'Words' },
-    { id: 'patterns', icon: '🔄', label: '句型操练', labelEn: 'Patterns' },
-    { id: 'shadowing', icon: '🎤', label: '跟读训练', labelEn: 'Shadowing' },
-    { id: 'progress', icon: '📊', label: '学习进度', labelEn: 'Progress' }
-  ];
-
-  let currentPage = 'home';
-  let isEnglish = false;
+  let isInitialized = false;
 
   function init() {
+    if (isInitialized) return;
+    
     setupEventListeners();
-    highlightCurrentPage();
-    updateGlobalStats();
-    updateSideNavStats();
+    restoreLastPage();
+    isInitialized = true;
+    console.log('🧭 Navigation initialized');
   }
 
   function setupEventListeners() {
@@ -1069,7 +1473,10 @@ const Navigation = (function() {
       bottomNav.addEventListener('click', (e) => {
         const navItem = e.target.closest('.nav-item');
         if (navItem) {
-          navigateTo(navItem.getAttribute('data-page'));
+          const pageId = navItem.getAttribute('data-page');
+          if (pageId) {
+            navigateTo(pageId);
+          }
         }
       });
     }
@@ -1080,122 +1487,83 @@ const Navigation = (function() {
       sideNav.addEventListener('click', (e) => {
         const navItem = e.target.closest('.nav-item');
         if (navItem) {
-          navigateTo(navItem.getAttribute('data-page'));
+          const pageId = navItem.getAttribute('data-page');
+          if (pageId) {
+            navigateTo(pageId);
+          }
         }
       });
     }
+
+    // Listen for page changes from AppState
+    AppState.on('currentPage', (pageId) => {
+      highlightCurrentPage(pageId);
+    });
   }
 
   function navigateTo(pageId) {
-    if (pageId === currentPage) return;
+    AppState.navigateTo(pageId);
+  }
 
-    currentPage = pageId;
-
-    // Update all navigation instances
-    highlightCurrentPage();
-
-    // Hide all pages
+  function restoreLastPage() {
+    // Navigate to last page or home
+    const currentPage = AppState.get('currentPage');
+    highlightCurrentPage(currentPage);
+    
+    // Show the current page
     document.querySelectorAll('.page').forEach(page => {
       page.classList.remove('active');
     });
-
-    // Show target page
-    const targetPage = document.getElementById(pageId);
+    const targetPage = document.getElementById(currentPage);
     if (targetPage) {
       targetPage.classList.add('active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
-    // Update global stats
-    updateGlobalStats();
-    updateSideNavStats();
-
-    // Refresh page content
-    refreshPage(pageId);
-
-    window.dispatchEvent(new CustomEvent('pageChange', { detail: { page: pageId } }));
   }
 
-  function updateGlobalStats() {
-    const learnedWords = Storage.getLearnedWords().length;
-    const streak = Storage.getStreak();
-
-    const headerStreak = document.getElementById('header-streak');
-    const headerLearned = document.getElementById('header-learned');
-    if (headerStreak) headerStreak.textContent = streak;
-    if (headerLearned) headerLearned.textContent = learnedWords;
-  }
-
-  function updateSideNavStats() {
-    const streak = Storage.getStreak();
-    const learned = Storage.getLearnedWords().length;
-
-    const streakEl = document.getElementById('sideNavStreak');
-    const learnedEl = document.getElementById('sideNavLearned');
-    if (streakEl) streakEl.textContent = streak + ' 天连续';
-    if (learnedEl) learnedEl.textContent = learned + ' 已学';
-  }
-
-  function highlightCurrentPage() {
-    // Update all nav-item instances (both bottom and side)
+  function highlightCurrentPage(pageId) {
     document.querySelectorAll('.nav-item').forEach(item => {
-      item.classList.toggle('active', item.getAttribute('data-page') === currentPage);
+      const itemPage = item.getAttribute('data-page');
+      item.classList.toggle('active', itemPage === pageId);
     });
   }
 
-  function refreshPage(pageId) {
-    switch (pageId) {
-      case 'home':
-        if (typeof HomePage !== 'undefined') HomePage.refresh();
-        break;
-      case 'words':
-        if (typeof WordsPage !== 'undefined') WordsPage.refresh();
-        break;
-      case 'patterns':
-        if (typeof PatternsPage !== 'undefined') PatternsPage.refresh();
-        break;
-      case 'shadowing':
-        if (typeof ShadowingPage !== 'undefined') ShadowingPage.refresh();
-        break;
-      case 'progress':
-        if (typeof ProgressPage !== 'undefined') ProgressPage.refresh();
-        break;
-    }
-  }
-
-  function setLanguage(isEn) {
-    isEnglish = isEn;
-  }
-
   function getCurrentPage() {
-    return currentPage;
+    return AppState.get('currentPage');
   }
 
   return {
     init,
     navigateTo,
-    setLanguage,
     getCurrentPage
   };
 })();
 
 
 /* === src/pages/home.js === */
+/**
+ * Home Page Module
+ * Metro Dashboard with learning overview
+ * Uses AppState for global state
+ */
 const HomePage = (function() {
-
-  // Daily goal target
   const DAILY_GOAL = 20;
+  let isInitialized = false;
 
   function init() {
-    const startBtn = document.getElementById('startBtn');
-    if (startBtn) {
-      startBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        navigateTo('words');
-      });
-    }
+    if (isInitialized) return;
+    
+    console.log('🏠 Initializing HomePage...');
+    
+    setupEventListeners();
     updateStats();
     updateGoalProgress();
+    
+    // Listen for state changes
+    AppState.on('learnedWords', updateStats);
+    AppState.on('streak', updateStats);
+    
+    isInitialized = true;
+    console.log('✅ HomePage initialized');
   }
 
   function refresh() {
@@ -1204,13 +1572,35 @@ const HomePage = (function() {
   }
 
   /**
-   * Update all stat displays across the dashboard
+   * Setup event listeners
+   */
+  function setupEventListeners() {
+    const startBtn = document.getElementById('startBtn');
+    if (startBtn) {
+      startBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        AppState.navigateTo('words');
+      });
+    }
+
+    const continueBtn = document.getElementById('continueBtn');
+    if (continueBtn) {
+      continueBtn.addEventListener('click', () => {
+        AppState.navigateTo('words');
+      });
+    }
+  }
+
+  /**
+   * Update all statistics displays
    */
   function updateStats() {
-    const learnedWords = Storage.getLearnedWords().length;
-    const streak = Storage.getStreak();
-    const drillsCompleted = Storage.getCompletedDrills().length;
-    const shadowingCompleted = Storage.getShadowingSessions().length;
+    const stats = AppState.getStats();
+    const learnedWords = stats.learnedWords;
+    const streak = stats.streak;
+    const patternsCompleted = stats.patternsPracticed;
+    const shadowingCompleted = stats.shadowingCompleted;
+    const totalWords = stats.totalWords || 587;
 
     // Header stats
     const headerStreak = document.getElementById('header-streak');
@@ -1218,78 +1608,79 @@ const HomePage = (function() {
     if (headerStreak) headerStreak.textContent = streak;
     if (headerLearned) headerLearned.textContent = learnedWords;
 
-    // Quick stats row (Metro pills)
+    // Quick stats row
     const homeWordsCount = document.getElementById('homeWordsCount');
     const homePatternsCount = document.getElementById('homePatternsCount');
     const homeShadowingCount = document.getElementById('homeShadowingCount');
     if (homeWordsCount) homeWordsCount.textContent = learnedWords;
-    if (homePatternsCount) homePatternsCount.textContent = drillsCompleted;
+    if (homePatternsCount) homePatternsCount.textContent = patternsCompleted;
     if (homeShadowingCount) homeShadowingCount.textContent = shadowingCompleted;
 
-    // Streak in progress tile
+    // Streak display
     const homeStreakDisplay = document.getElementById('homeStreakDisplay');
     if (homeStreakDisplay) homeStreakDisplay.textContent = streak + '天';
 
     // Module stats
     const wordsLearned = document.getElementById('wordsLearned');
-    const patternsCompleted = document.getElementById('patternsCompleted');
-    const shadowingComp = document.getElementById('shadowingCompleted');
+    const patternsCompletedEl = document.getElementById('patternsCompleted');
+    const shadowingCompletedEl = document.getElementById('shadowingCompleted');
 
-    if (wordsLearned) wordsLearned.textContent = learnedWords + '/587';
-    if (patternsCompleted) patternsCompleted.textContent = drillsCompleted;
-    if (shadowingComp) shadowingComp.textContent = shadowingCompleted;
+    if (wordsLearned) wordsLearned.textContent = `${learnedWords}/${totalWords}`;
+    if (patternsCompletedEl) patternsCompletedEl.textContent = patternsCompleted;
+    if (shadowingCompletedEl) shadowingCompletedEl.textContent = shadowingCompleted;
 
     // Metro progress rings
-    updateProgressRing('wordsProgress', learnedWords, 587);
-    updateProgressRing('patternsProgress', drillsCompleted, 50);
+    updateProgressRing('wordsProgress', learnedWords, totalWords);
+    updateProgressRing('patternsProgress', patternsCompleted, 50);
     updateProgressRing('shadowingProgress', shadowingCompleted, 50);
     updateProgressRing('progressProgress', streak, 30);
+
+    // Update day badge
+    const currentDay = AppState.get('currentDay') || 1;
+    const homeDayBadge = document.getElementById('homeDayBadge');
+    if (homeDayBadge) homeDayBadge.textContent = `Day ${currentDay}`;
   }
 
   /**
-   * Update a metro progress ring element
-   * @param {string} id - Element ID
-   * @param {number} current - Current value
-   * @param {number} total - Total value
+   * Update a Metro progress ring
    */
   function updateProgressRing(id, current, total) {
     const el = document.getElementById(id);
     if (!el) return;
-    const pct = Math.min((current / total) * 360, 360);
-    const remaining = 360 - pct;
-    el.style.background = `conic-gradient(var(--tile-color, var(--primary-color)) ${pct}deg, var(--border-color) ${pct}deg)`;
-    el.textContent = current > 0 ? Math.round((current / total) * 100) + '%' : '';
+    
+    const pct = Math.min((current / total) * 100, 100);
+    const deg = (pct / 100) * 360;
+    el.style.background = `conic-gradient(var(--primary-color) ${deg}deg, var(--border-color) ${deg}deg)`;
+    el.textContent = current > 0 ? Math.round(pct) + '%' : '';
   }
 
   /**
-   * Update the daily goal progress bar and counter
+   * Update daily goal progress
    */
   function updateGoalProgress() {
-    const learnedWords = Storage.getLearnedWords().length;
+    const stats = AppState.getStats();
+    const todayTotal = stats.learnedWords;
+    const pct = Math.min((todayTotal / DAILY_GOAL) * 100, 100);
+
     const goalCurrent = document.getElementById('goalCurrent');
     const goalTarget = document.getElementById('goalTarget');
     const goalBarFill = document.getElementById('goalBarFill');
     const dailyGoalText = document.getElementById('dailyGoalText');
 
-    const todayTotal = learnedWords; // simplified: use total learned as today's progress
-    const pct = Math.min((todayTotal / DAILY_GOAL) * 100, 100);
-
     if (goalCurrent) goalCurrent.textContent = todayTotal;
     if (goalTarget) goalTarget.textContent = DAILY_GOAL;
     if (goalBarFill) goalBarFill.style.width = pct + '%';
     if (dailyGoalText) {
-      if (pct >= 100) {
-        dailyGoalText.textContent = '🎉 今日目标已完成！';
-      } else {
-        dailyGoalText.textContent = `完成 ${DAILY_GOAL} 个词汇`;
-      }
+      dailyGoalText.textContent = pct >= 100 
+        ? '🎉 今日目标已完成！' 
+        : `完成 ${DAILY_GOAL} 个词汇`;
     }
   }
 
   return {
-    init: init,
-    refresh: refresh,
-    updateStats: updateStats
+    init,
+    refresh,
+    updateStats
   };
 })();
 
@@ -1298,26 +1689,59 @@ const HomePage = (function() {
 /**
  * Vocabulary Training Module
  * Features: speech playback, day selection, adjustable speed, repeat mode, mark as learned
+ * Uses AppState for global state management
  */
 const WordsPage = (function() {
   let wordsData = [];
-  let learnedWords = new Set();
+  let availableDays = [];
   let currentSpeed = 1;
   let isRepeatMode = false;
   let currentDay = 1;
-  let availableDays = [];
+  let isInitialized = false;
+  let currentWordIndex = -1;
 
+  /**
+   * Initialize the Words page
+   */
   async function init() {
-    await loadWeekData();
-    loadLearnedWords();
+    if (isInitialized) return;
+    
+    console.log('📖 Initializing WordsPage...');
+    
     setupEventListeners();
-    renderDaySelector();
-    await loadDay(1);
-    renderWords();
+    
+    // Wait for week data to be available
+    await loadWeekData();
+    
+    // Load initial day
+    await loadDay(currentDay);
+    
+    isInitialized = true;
+    console.log('✅ WordsPage initialized');
   }
 
+  /**
+   * Called when week data is ready
+   */
+  async function onDataReady(weekData) {
+    console.log('📚 WordsPage received week data');
+    availableDays = weekData.days.map(d => ({
+      day: d.day,
+      title: d.title,
+      titleCn: d.titleCn,
+      titleEn: d.titleEn
+    }));
+    renderDaySelector();
+    updateDayTitle();
+  }
+
+  /**
+   * Load week data from AppState or DayLoader
+   */
   async function loadWeekData() {
-    const weekData = await DayLoader.loadWeek1();
+    // First check if AppState has the data
+    const weekData = AppState.get('weekData');
+    
     if (weekData && weekData.days) {
       availableDays = weekData.days.map(d => ({
         day: d.day,
@@ -1325,33 +1749,96 @@ const WordsPage = (function() {
         titleCn: d.titleCn,
         titleEn: d.titleEn
       }));
+    } else {
+      // Load from DayLoader
+      const data = await DayLoader.loadWeek1();
+      if (data && data.days) {
+        AppState.setWeekData(data);
+        availableDays = data.days.map(d => ({
+          day: d.day,
+          title: d.title,
+          titleCn: d.titleCn,
+          titleEn: d.titleEn
+        }));
+      }
     }
+    
     renderDaySelector();
   }
 
+  /**
+   * Load a specific day's data
+   */
   async function loadDay(dayNumber) {
-    const data = await DayLoader.loadDay(dayNumber);
-    if (data) {
-      wordsData = data.words || [];
-      currentDay = dayNumber;
-      updateDayTitle();
-      renderWords();
+    console.log(`📅 Loading day ${dayNumber}...`);
+    
+    try {
+      // Load from DayLoader
+      const data = await DayLoader.loadDay(dayNumber);
+      
+      if (data) {
+        wordsData = data.words || [];
+        currentDay = dayNumber;
+        currentWordIndex = -1;
+        
+        // Update AppState
+        AppState.setDayData(data);
+        AppState.set('currentDay', dayNumber);
+        
+        updateDayTitle();
+        renderWords();
+        
+        console.log(`✅ Day ${dayNumber} loaded: ${wordsData.length} words`);
+      } else {
+        console.error(`❌ Failed to load day ${dayNumber}`);
+        showEmptyState();
+      }
+    } catch (error) {
+      console.error('Error loading day:', error);
+      showEmptyState();
     }
   }
 
+  /**
+   * Show empty state when no data
+   */
+  function showEmptyState() {
+    const container = document.getElementById('wordsList');
+    if (container) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📚</div>
+          <p>加载数据中...</p>
+          <button onclick="WordsPage.refresh()">重试</button>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Update day title
+   */
   function updateDayTitle() {
     const titleEl = document.getElementById('wordsDayTitle');
     if (titleEl && availableDays.length > 0) {
       const dayInfo = availableDays.find(d => d.day === currentDay);
       if (dayInfo) {
-        titleEl.textContent = `${I18n.t('day')} ${currentDay}: ${dayInfo.titleCn || dayInfo.title}`;
+        titleEl.textContent = `Day ${currentDay}: ${dayInfo.titleCn || dayInfo.title}`;
       }
     }
   }
 
+  /**
+   * Render day selector buttons
+   */
   function renderDaySelector() {
     const container = document.getElementById('daySelector');
     if (!container) return;
+
+    if (availableDays.length === 0) {
+      container.innerHTML = '<span class="loading-text">加载中...</span>';
+      return;
+    }
 
     container.innerHTML = availableDays.map(day => {
       const isActive = day.day === currentDay;
@@ -1366,34 +1853,36 @@ const WordsPage = (function() {
     }).join('');
   }
 
+  /**
+   * Select a day
+   */
   function selectDay(dayNumber) {
-    if (!DayLoader.isDayUnlocked(dayNumber)) return;
+    if (!DayLoader.isDayUnlocked(dayNumber)) {
+      console.log(`Day ${dayNumber} is locked`);
+      return;
+    }
     loadDay(dayNumber);
     renderDaySelector();
   }
 
-  function loadLearnedWords() {
-    const saved = localStorage.getItem('linguadrill_learned_words');
-    if (saved) {
-      learnedWords = new Set(JSON.parse(saved));
-    }
-  }
-
-  function saveLearnedWords() {
-    localStorage.setItem('linguadrill_learned_words', JSON.stringify([...learnedWords]));
-  }
-
+  /**
+   * Setup event listeners
+   */
   function setupEventListeners() {
+    // Speed slider
     const speedSlider = document.getElementById('wordSpeedSlider');
     const speedValue = document.getElementById('wordSpeedValue');
     if (speedSlider) {
       speedSlider.addEventListener('input', (e) => {
         currentSpeed = parseFloat(e.target.value);
         if (speedValue) speedValue.textContent = `${currentSpeed.toFixed(1)}x`;
-        Speech.setRate(currentSpeed);
+        if (typeof Speech !== 'undefined') {
+          Speech.setRate(currentSpeed);
+        }
       });
     }
 
+    // Repeat mode toggle
     const repeatBtn = document.getElementById('repeatModeBtn');
     if (repeatBtn) {
       repeatBtn.addEventListener('click', () => {
@@ -1402,36 +1891,58 @@ const WordsPage = (function() {
         repeatBtn.textContent = isRepeatMode ? '🔁 重复3次: 开' : '🔁 重复3次: 关';
       });
     }
+
+    // Listen for data ready event
+    AppState.on('weekData', (data) => {
+      if (data && data.days) {
+        availableDays = data.days.map(d => ({
+          day: d.day,
+          title: d.title,
+          titleCn: d.titleCn,
+          titleEn: d.titleEn
+        }));
+        renderDaySelector();
+        updateDayTitle();
+      }
+    });
   }
 
+  /**
+   * Render the vocabulary list
+   */
   function renderWords() {
     const container = document.getElementById('wordsList');
     if (!container) return;
 
     if (wordsData.length === 0) {
-      container.innerHTML = '<div class="empty-state">📚 No words loaded. Please select a day.</div>';
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📚</div>
+          <p>暂无词汇数据</p>
+        </div>
+      `;
       return;
     }
 
     container.innerHTML = wordsData.map((word, index) => {
-      const isLearned = learnedWords.has(`${currentDay}_${word.word}`);
+      const isLearned = AppState.isWordLearned(currentDay, word.word);
       return `
         <div class="word-card ${isLearned ? 'learned' : ''}" data-index="${index}">
           <div class="word-header">
             <div class="word-main">
               <span class="word-text" onclick="WordsPage.playWord(${index})">${word.word}</span>
-              <span class="word-phonetic">${word.phonetic}</span>
+              <span class="word-phonetic">${word.phonetic || ''}</span>
             </div>
-            <button class="word-audio-btn" onclick="WordsPage.playWord(${index})" aria-label="Play pronunciation">
+            <button class="word-audio-btn" onclick="WordsPage.playWord(${index})" aria-label="播放发音">
               🔊
             </button>
           </div>
-          <div class="word-translation">${word.translation}</div>
-          <div class="word-example">"${word.example}"</div>
-          <div class="word-example-cn">${word.exampleCn}</div>
+          <div class="word-translation">${word.translation || ''}</div>
+          <div class="word-example">"${word.example || ''}"</div>
+          <div class="word-example-cn">${word.exampleCn || ''}</div>
           <div class="word-actions">
             <button class="word-action-btn ${isLearned ? 'learned' : ''}" 
-                    onclick="WordsPage.toggleLearned('${word.word}')">
+                    onclick="WordsPage.toggleLearned('${word.word.replace(/'/g, "\\'")}')">
               ${isLearned ? '✅ 已学会' : '⭕ 标记为已学'}
             </button>
           </div>
@@ -1440,9 +1951,14 @@ const WordsPage = (function() {
     }).join('');
   }
 
+  /**
+   * Play word pronunciation
+   */
   function playWord(index) {
     const word = wordsData[index];
-    if (!word) return;
+    if (!word || typeof Speech === 'undefined') return;
+
+    currentWordIndex = index;
 
     if (isRepeatMode) {
       Speech.speak(word.word, currentSpeed);
@@ -1452,55 +1968,116 @@ const WordsPage = (function() {
       Speech.speak(word.word, currentSpeed);
     }
 
+    // Update learning stats
+    AppState.set('wordsLearned', AppState.get('wordsLearned') + 1);
     Storage.incrementWordsLearned();
   }
 
-  function playExample(index) {
-    const word = wordsData[index];
-    if (!word || !word.example) return;
-    Speech.speak(word.example, currentSpeed);
+  /**
+   * Play the current word (for keyboard shortcut)
+   */
+  function playCurrentWord() {
+    if (currentWordIndex >= 0 && currentWordIndex < wordsData.length) {
+      playWord(currentWordIndex);
+    } else if (wordsData.length > 0) {
+      playWord(0);
+    }
   }
 
+  /**
+   * Toggle word learned status
+   */
   function toggleLearned(word) {
-    const key = `${currentDay}_${word}`;
-    if (learnedWords.has(key)) {
-      learnedWords.delete(key);
+    const isLearned = AppState.isWordLearned(currentDay, word);
+    
+    if (isLearned) {
+      AppState.unmarkWordLearned(currentDay, word);
     } else {
-      learnedWords.add(key);
+      AppState.markWordLearned(currentDay, word);
     }
-    saveLearnedWords();
+
+    // Re-render
     renderWords();
+    
+    // Check for day completion
     checkDayCompletion();
-    // Update global stats
-    if (typeof Navigation !== 'undefined' && Navigation.updateGlobalStats) {
-      Navigation.updateGlobalStats();
-    }
-    // Also update home page stats if available
+    
+    // Update global stats display
+    AppState.updateHeaderStats();
+    
+    // Update HomePage if available
     if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
       HomePage.updateStats();
     }
   }
 
+  /**
+   * Check if day is completed (80% learned)
+   */
   function checkDayCompletion() {
     const dayWordsCount = wordsData.length;
-    const learnedToday = wordsData.filter(w => learnedWords.has(`${currentDay}_${w.word}`)).length;
+    const learnedToday = AppState.getDayLearnedWords(currentDay).length;
     
-    if (learnedToday >= dayWordsCount * 0.8) {
+    if (dayWordsCount > 0 && learnedToday >= dayWordsCount * 0.8) {
       DayLoader.markDayCompleted(currentDay);
+      console.log(`🎉 Day ${currentDay} completed! (${learnedToday}/${dayWordsCount})`);
+      
+      // Show completion message
+      showDayCompletedMessage();
+      
+      // Refresh day selector to unlock next day
+      renderDaySelector();
     }
   }
 
+  /**
+   * Show day completion message
+   */
+  function showDayCompletedMessage() {
+    const container = document.getElementById('wordsList');
+    if (container) {
+      const completionMsg = document.createElement('div');
+      completionMsg.className = 'completion-message';
+      completionMsg.innerHTML = `
+        <div class="completion-content">
+          <span class="completion-icon">🎉</span>
+          <h3>太棒了！</h3>
+          <p>Day ${currentDay} 已完成！</p>
+        </div>
+      `;
+      container.prepend(completionMsg);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        completionMsg.remove();
+      }, 3000);
+    }
+  }
+
+  /**
+   * Refresh the page
+   */
   function refresh() {
+    console.log('🔄 Refreshing WordsPage...');
     loadLearnedWords();
     renderDaySelector();
     renderWords();
+    updateDayTitle();
+  }
+
+  /**
+   * Load learned words from storage
+   */
+  function loadLearnedWords() {
+    // Data is managed by AppState now
   }
 
   return {
     init,
     refresh,
+    onDataReady,
     playWord,
-    playExample,
+    playCurrentWord,
     toggleLearned,
     selectDay
   };
@@ -1511,6 +2088,7 @@ const WordsPage = (function() {
 /**
  * Pattern Drill Module
  * Interactive pattern training with auto sentence generation and speech playback
+ * Uses AppState for global state management
  */
 const PatternsPage = (function() {
   let currentSpeed = 1;
@@ -1519,18 +2097,27 @@ const PatternsPage = (function() {
   let isAutoPlay = false;
   let currentDay = 1;
   let availableDays = [];
+  let isInitialized = false;
 
   async function init() {
+    if (isInitialized) return;
+    
+    console.log('🔄 Initializing PatternsPage...');
+    
     await loadWeekData();
     setupEventListeners();
     renderDaySelector();
     await loadDay(1);
     renderPatternList();
     generateNewSentence();
+    
+    isInitialized = true;
+    console.log('✅ PatternsPage initialized');
   }
 
   async function loadWeekData() {
-    const weekData = await DayLoader.loadWeek1();
+    const weekData = AppState.get('weekData');
+    
     if (weekData && weekData.days) {
       availableDays = weekData.days.map(d => ({
         day: d.day,
@@ -1538,6 +2125,17 @@ const PatternsPage = (function() {
         titleCn: d.titleCn,
         titleEn: d.titleEn
       }));
+    } else {
+      const data = await DayLoader.loadWeek1();
+      if (data && data.days) {
+        AppState.setWeekData(data);
+        availableDays = data.days.map(d => ({
+          day: d.day,
+          title: d.title,
+          titleCn: d.titleCn,
+          titleEn: d.titleEn
+        }));
+      }
     }
     renderDaySelector();
   }
@@ -1567,6 +2165,11 @@ const PatternsPage = (function() {
     const container = document.getElementById('patternsDaySelector');
     if (!container) return;
 
+    if (availableDays.length === 0) {
+      container.innerHTML = '<span class="loading-text">加载中...</span>';
+      return;
+    }
+
     container.innerHTML = availableDays.map(day => {
       const isActive = day.day === currentDay;
       const isUnlocked = DayLoader.isDayUnlocked(day.day);
@@ -1593,7 +2196,9 @@ const PatternsPage = (function() {
       speedSlider.addEventListener('input', (e) => {
         currentSpeed = parseFloat(e.target.value);
         if (speedValue) speedValue.textContent = `${currentSpeed.toFixed(1)}x`;
-        Speech.setRate(currentSpeed);
+        if (typeof Speech !== 'undefined') {
+          Speech.setRate(currentSpeed);
+        }
       });
     }
 
@@ -1611,6 +2216,20 @@ const PatternsPage = (function() {
     if (autoPlayBtn) {
       autoPlayBtn.addEventListener('click', toggleAutoPlay);
     }
+
+    // Listen for week data updates
+    AppState.on('weekData', (data) => {
+      if (data && data.days) {
+        availableDays = data.days.map(d => ({
+          day: d.day,
+          title: d.title,
+          titleCn: d.titleCn,
+          titleEn: d.titleEn
+        }));
+        renderDaySelector();
+        updateDayTitle();
+      }
+    });
   }
 
   function renderPatternList() {
@@ -1619,7 +2238,7 @@ const PatternsPage = (function() {
 
     const patterns = PatternEngine.getAllPatterns();
     if (patterns.length === 0) {
-      container.innerHTML = '<div class="empty-state">📝 No patterns loaded. Please select a day.</div>';
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><p>暂无句型数据</p></div>';
       return;
     }
 
@@ -1641,7 +2260,13 @@ const PatternsPage = (function() {
 
   function generateNewSentence() {
     const result = PatternEngine.generateSentence();
-    if (!result) return;
+    if (!result) {
+      const sentenceDisplay = document.getElementById('sentenceDisplay');
+      if (sentenceDisplay) {
+        sentenceDisplay.textContent = '点击"生成句子"开始练习';
+      }
+      return;
+    }
 
     currentSentence = result.sentence;
     currentPattern = result.template;
@@ -1660,7 +2285,14 @@ const PatternsPage = (function() {
       templateDisplay.textContent = `模板: ${currentPattern}`;
     }
 
+    // Update stats via AppState
+    AppState.incrementPatterns(1);
     Storage.incrementPatternsPracticed();
+
+    // Update HomePage if available
+    if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
+      HomePage.updateStats();
+    }
 
     if (isAutoPlay) {
       setTimeout(() => playCurrentSentence(), 500);
@@ -1668,7 +2300,7 @@ const PatternsPage = (function() {
   }
 
   function playCurrentSentence() {
-    if (!currentSentence) return;
+    if (!currentSentence || typeof Speech === 'undefined') return;
     Speech.speak(currentSentence, currentSpeed);
   }
 
@@ -1704,6 +2336,7 @@ const PatternsPage = (function() {
 /**
  * Shadowing Module
  * Train listening rhythm and speaking rhythm with play/pause and "Your Turn" indicator
+ * Uses AppState for global state management
  */
 const ShadowingPage = (function() {
   let shadowingData = [];
@@ -1714,8 +2347,13 @@ const ShadowingPage = (function() {
   let currentDay = 1;
   let availableDays = [];
   let completedShadowing = new Set();
+  let isInitialized = false;
 
   async function init() {
+    if (isInitialized) return;
+    
+    console.log('🎤 Initializing ShadowingPage...');
+    
     await loadWeekData();
     loadCompletedShadowing();
     setupEventListeners();
@@ -1723,10 +2361,14 @@ const ShadowingPage = (function() {
     await loadDay(1);
     renderSentenceList();
     renderPlayer();
+    
+    isInitialized = true;
+    console.log('✅ ShadowingPage initialized');
   }
 
   async function loadWeekData() {
-    const weekData = await DayLoader.loadWeek1();
+    const weekData = AppState.get('weekData');
+    
     if (weekData && weekData.days) {
       availableDays = weekData.days.map(d => ({
         day: d.day,
@@ -1734,6 +2376,17 @@ const ShadowingPage = (function() {
         titleCn: d.titleCn,
         titleEn: d.titleEn
       }));
+    } else {
+      const data = await DayLoader.loadWeek1();
+      if (data && data.days) {
+        AppState.setWeekData(data);
+        availableDays = data.days.map(d => ({
+          day: d.day,
+          title: d.title,
+          titleCn: d.titleCn,
+          titleEn: d.titleEn
+        }));
+      }
     }
     renderDaySelector();
   }
@@ -1766,6 +2419,11 @@ const ShadowingPage = (function() {
     const container = document.getElementById('shadowingDaySelector');
     if (!container) return;
 
+    if (availableDays.length === 0) {
+      container.innerHTML = '<span class="loading-text">加载中...</span>';
+      return;
+    }
+
     container.innerHTML = availableDays.map(day => {
       const isActive = day.day === currentDay;
       const isUnlocked = DayLoader.isDayUnlocked(day.day);
@@ -1786,14 +2444,22 @@ const ShadowingPage = (function() {
   }
 
   function loadCompletedShadowing() {
-    const saved = localStorage.getItem('linguadrill_completed_shadowing');
-    if (saved) {
-      completedShadowing = new Set(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem('linguadrill_completed_shadowing');
+      if (saved) {
+        completedShadowing = new Set(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Failed to load shadowing progress:', e);
     }
   }
 
   function saveCompletedShadowing() {
-    localStorage.setItem('linguadrill_completed_shadowing', JSON.stringify([...completedShadowing]));
+    try {
+      localStorage.setItem('linguadrill_completed_shadowing', JSON.stringify([...completedShadowing]));
+    } catch (e) {
+      console.error('Failed to save shadowing progress:', e);
+    }
   }
 
   function setupEventListeners() {
@@ -1803,7 +2469,9 @@ const ShadowingPage = (function() {
       speedSlider.addEventListener('input', (e) => {
         currentSpeed = parseFloat(e.target.value);
         if (speedValue) speedValue.textContent = `${currentSpeed.toFixed(1)}x`;
-        Speech.setRate(currentSpeed);
+        if (typeof Speech !== 'undefined') {
+          Speech.setRate(currentSpeed);
+        }
       });
     }
 
@@ -1816,6 +2484,20 @@ const ShadowingPage = (function() {
     if (replayBtn) replayBtn.addEventListener('click', replayCurrent);
     if (nextBtn) nextBtn.addEventListener('click', nextSentence);
     if (prevBtn) prevBtn.addEventListener('click', prevSentence);
+
+    // Listen for week data updates
+    AppState.on('weekData', (data) => {
+      if (data && data.days) {
+        availableDays = data.days.map(d => ({
+          day: d.day,
+          title: d.title,
+          titleCn: d.titleCn,
+          titleEn: d.titleEn
+        }));
+        renderDaySelector();
+        updateDayTitle();
+      }
+    });
   }
 
   function renderSentenceList() {
@@ -1823,12 +2505,12 @@ const ShadowingPage = (function() {
     if (!container) return;
 
     if (shadowingData.length === 0) {
-      container.innerHTML = '<div class="empty-state">🎧 No sentences loaded. Please select a day.</div>';
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🎧</div><p>暂无跟读数据</p></div>';
       return;
     }
 
     container.innerHTML = shadowingData.map((item, index) => {
-      const key = `${currentDay}_${item.id}`;
+      const key = `${currentDay}_${item.id || index}`;
       const isCompleted = completedShadowing.has(key);
       return `
         <div class="shadowing-item ${index === currentIndex ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
@@ -1836,11 +2518,11 @@ const ShadowingPage = (function() {
              onclick="ShadowingPage.selectSentence(${index})">
           <div class="shadowing-number">${index + 1}</div>
           <div class="shadowing-content">
-            <div class="shadowing-sentence">${item.sentence}</div>
-            <div class="shadowing-translation">${item.translation}</div>
+            <div class="shadowing-sentence">${item.sentence || item.text || ''}</div>
+            <div class="shadowing-translation">${item.translation || ''}</div>
           </div>
           <div class="shadowing-status">
-            ${isCompleted ? '✅' : item.difficulty === 'easy' ? '🟢' : '🟡'}
+            ${isCompleted ? '✅' : (item.difficulty === 'easy' ? '🟢' : '🟡')}
           </div>
         </div>
       `;
@@ -1849,19 +2531,25 @@ const ShadowingPage = (function() {
 
   function renderPlayer() {
     const currentItem = shadowingData[currentIndex];
-    if (!currentItem) return;
-
+    
     const sentenceDisplay = document.getElementById('shadowingSentenceDisplay');
     const translationDisplay = document.getElementById('shadowingTranslationDisplay');
     const yourTurnIndicator = document.getElementById('yourTurnIndicator');
     const progressDisplay = document.getElementById('shadowingProgress');
 
+    if (!currentItem) {
+      if (sentenceDisplay) sentenceDisplay.textContent = '选择一个句子开始跟读';
+      if (translationDisplay) translationDisplay.textContent = '';
+      if (progressDisplay) progressDisplay.textContent = '0 / 0';
+      return;
+    }
+
     if (sentenceDisplay) {
-      sentenceDisplay.textContent = currentItem.sentence;
+      sentenceDisplay.textContent = currentItem.sentence || currentItem.text || '';
     }
 
     if (translationDisplay) {
-      translationDisplay.textContent = currentItem.translation;
+      translationDisplay.textContent = currentItem.translation || '';
     }
 
     if (yourTurnIndicator) {
@@ -1889,15 +2577,16 @@ const ShadowingPage = (function() {
 
   function playCurrent() {
     const currentItem = shadowingData[currentIndex];
-    if (!currentItem) return;
+    if (!currentItem || typeof Speech === 'undefined') return;
 
     isPlaying = true;
     isPausedForUser = false;
     renderPlayer();
 
-    const duration = (currentItem.sentence.length * 80) / currentSpeed;
+    const text = currentItem.sentence || currentItem.text || '';
+    const duration = (text.length * 80) / currentSpeed;
 
-    Speech.speak(currentItem.sentence, currentSpeed);
+    Speech.speak(text, currentSpeed);
 
     setTimeout(() => {
       isPausedForUser = true;
@@ -1906,13 +2595,20 @@ const ShadowingPage = (function() {
       markCurrentCompleted();
     }, duration);
 
+    // Update stats via AppState
+    AppState.incrementShadowing(1);
     Storage.incrementShadowingCompleted();
+
+    // Update HomePage if available
+    if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
+      HomePage.updateStats();
+    }
   }
 
   function markCurrentCompleted() {
     const currentItem = shadowingData[currentIndex];
     if (currentItem) {
-      const key = `${currentDay}_${currentItem.id}`;
+      const key = `${currentDay}_${currentItem.id || currentIndex}`;
       completedShadowing.add(key);
       saveCompletedShadowing();
       renderSentenceList();
@@ -1922,10 +2618,11 @@ const ShadowingPage = (function() {
 
   function checkDayCompletion() {
     const dayShadowingCount = shadowingData.length;
-    const completedToday = shadowingData.filter(s => completedShadowing.has(`${currentDay}_${s.id}`)).length;
+    const completedToday = shadowingData.filter(s => completedShadowing.has(`${currentDay}_${s.id || shadowingData.indexOf(s)}`)).length;
     
-    if (completedToday >= dayShadowingCount * 0.8) {
+    if (dayShadowingCount > 0 && completedToday >= dayShadowingCount * 0.8) {
       DayLoader.markDayCompleted(currentDay);
+      console.log(`🎉 Day ${currentDay} shadowing completed!`);
     }
   }
 
@@ -1978,29 +2675,48 @@ const ShadowingPage = (function() {
 /* === src/pages/progress.js === */
 /**
  * Learning Progress System
- * Track and display learning progress using LocalStorage
+ * Track and display learning progress using AppState and LocalStorage
  */
 const ProgressPage = (function() {
+  let isInitialized = false;
+
   function init() {
+    if (isInitialized) return;
+    
+    console.log('📊 Initializing ProgressPage...');
+    
     updateProgressDisplay();
     renderHistory();
     renderAchievements();
+    
+    // Listen for state changes
+    AppState.on('learnedWords', updateProgressDisplay);
+    AppState.on('patternsPracticed', updateProgressDisplay);
+    AppState.on('shadowingCompleted', updateProgressDisplay);
+    AppState.on('streak', updateProgressDisplay);
+    
+    isInitialized = true;
+    console.log('✅ ProgressPage initialized');
   }
 
   function updateProgressDisplay() {
+    const stats = AppState.getStats();
     const progress = Storage.getProgress();
     const streak = Storage.getStreak();
 
     // Update main stats
-    updateStat('wordsLearned', progress.wordsLearned);
-    updateStat('patternsPracticed', progress.patternsPracticed);
-    updateStat('shadowingCompleted', progress.shadowingCompleted);
+    updateStat('wordsLearned', stats.learnedWords);
+    updateStat('patternsPracticed', stats.patternsPracticed);
+    updateStat('shadowingCompleted', stats.shadowingCompleted);
     updateStat('streakCount', streak.current);
 
     // Update progress bars
-    updateProgressBar('wordsProgress', progress.wordsLearned, progress.totalWords || 20);
-    updateProgressBar('patternsProgress', progress.patternsPracticed, progress.totalPatterns || 8);
-    updateProgressBar('shadowingProgress', progress.shadowingCompleted, progress.totalShadowing || 10);
+    const totalWords = progress.totalWords || stats.totalWords || 587;
+    const wordsTarget = Math.max(20, totalWords);
+    
+    updateProgressBar('wordsProgress', stats.learnedWords, wordsTarget);
+    updateProgressBar('patternsProgress', stats.patternsPracticed, 50);
+    updateProgressBar('shadowingProgress', stats.shadowingCompleted, 50);
   }
 
   function updateStat(elementId, value) {
@@ -2081,7 +2797,7 @@ const ProgressPage = (function() {
     const container = document.getElementById('achievementsList');
     if (!container) return;
 
-    const progress = Storage.getProgress();
+    const stats = AppState.getStats();
     const streak = Storage.getStreak();
 
     const achievements = [
@@ -2090,28 +2806,35 @@ const ProgressPage = (function() {
         icon: '🎯',
         title: '初次学习',
         description: '学习第一个单词',
-        unlocked: progress.wordsLearned >= 1
+        unlocked: stats.learnedWords >= 1
       },
       {
         id: 'word_master',
         icon: '📚',
         title: '词汇达人',
         description: '学习10个单词',
-        unlocked: progress.wordsLearned >= 10
+        unlocked: stats.learnedWords >= 10
+      },
+      {
+        id: 'word_expert',
+        icon: '📖',
+        title: '词汇专家',
+        description: '学习50个单词',
+        unlocked: stats.learnedWords >= 50
       },
       {
         id: 'pattern_pro',
         icon: '🔄',
         title: '句型高手',
         description: '完成10次句型练习',
-        unlocked: progress.patternsPracticed >= 10
+        unlocked: stats.patternsPracticed >= 10
       },
       {
         id: 'shadowing_star',
         icon: '🎤',
         title: '跟读之星',
         description: '完成5次跟读练习',
-        unlocked: progress.shadowingCompleted >= 5
+        unlocked: stats.shadowingCompleted >= 5
       },
       {
         id: 'streak_3',
@@ -2126,6 +2849,13 @@ const ProgressPage = (function() {
         title: '连续7天',
         description: '连续学习7天',
         unlocked: streak.current >= 7
+      },
+      {
+        id: 'streak_30',
+        icon: '💎',
+        title: '坚持30天',
+        description: '连续学习30天',
+        unlocked: streak.current >= 30
       }
     ];
 
@@ -2170,86 +2900,129 @@ const ProgressPage = (function() {
   };
 })();
 
+
 /* === src/app.js === */
 /**
  * LinguaDrill Main Application
- * Initialize and coordinate all modules
+ * Thin coordinator using AppState as single source of truth
  */
 const App = (function() {
-  let currentPage = 'home';
+  let isInitialized = false;
 
   function init() {
-    initUtilities();
+    if (isInitialized) return;
+    
+    console.log('🚀 Initializing LinguaDrill...');
+
+    // Initialize AppState first (this loads persisted state)
+    AppState.init();
+
+    // Initialize Navigation (uses AppState)
     Navigation.init();
+
+    // Initialize utilities
+    initUtilities();
+
+    // Initialize all pages
     initPages();
-    setupEventListeners();
-    I18n.translatePage();
+
+    // Setup global event listeners
+    setupGlobalListeners();
+
+    // Translate UI
+    if (typeof I18n !== 'undefined') {
+      I18n.translatePage();
+    }
+
+    isInitialized = true;
     console.log('🎯 LinguaDrill initialized successfully!');
   }
 
   function initUtilities() {
+    // Load speech settings
     const settings = Storage.getSettings();
-    if (settings.speechRate) {
+    if (settings.speechRate && typeof Speech !== 'undefined') {
       Speech.setRate(settings.speechRate);
     }
-    DayLoader.loadWeek1();
+
+    // Pre-load week data
+    loadWeekData();
+  }
+
+  async function loadWeekData() {
+    console.log('📚 Loading week data...');
+    try {
+      const weekData = await DayLoader.loadWeek1();
+      if (weekData) {
+        AppState.setWeekData(weekData);
+        console.log('✅ Week data loaded:', {
+          days: weekData.days?.length,
+          totalWords: weekData.days?.reduce((sum, d) => sum + (d.words?.length || 0), 0)
+        });
+        
+        // Notify pages that data is ready
+        if (typeof WordsPage !== 'undefined' && WordsPage.onDataReady) {
+          WordsPage.onDataReady(weekData);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to load week data:', error);
+      AppState.set('error', error.message);
+    }
   }
 
   function initPages() {
-    if (typeof HomePage !== 'undefined') {
-      HomePage.init();
-    }
-    if (typeof WordsPage !== 'undefined') {
-      WordsPage.init();
-    }
-    if (typeof PatternsPage !== 'undefined') {
-      PatternsPage.init();
-    }
-    if (typeof ShadowingPage !== 'undefined') {
-      ShadowingPage.init();
-    }
-    if (typeof ProgressPage !== 'undefined') {
-      ProgressPage.init();
-    }
+    // Each page module has its own init() that renders content
+    const pages = ['HomePage', 'WordsPage', 'PatternsPage', 'ShadowingPage', 'ProgressPage'];
+    pages.forEach(pageName => {
+      if (typeof window[pageName] !== 'undefined' && window[pageName].init) {
+        try {
+          window[pageName].init();
+        } catch (e) {
+          console.error(`Failed to init ${pageName}:`, e);
+        }
+      }
+    });
   }
 
-  function setupEventListeners() {
+  function setupGlobalListeners() {
+    // Language toggle
     const langToggle = document.getElementById('langToggle');
     if (langToggle) {
-      langToggle.addEventListener('click', toggleLanguage);
-    }
-
-    const startBtn = document.getElementById('startBtn');
-    if (startBtn) {
-      startBtn.addEventListener('click', () => {
-        Navigation.navigateTo('words');
+      langToggle.addEventListener('click', () => {
+        if (typeof I18n !== 'undefined') {
+          const currentLang = I18n.getLanguage();
+          const newLang = currentLang === 'zh' ? 'en' : 'zh';
+          I18n.setLanguage(newLang);
+          I18n.translatePage();
+          updateLangToggleText();
+        }
       });
     }
 
-    const continueBtn = document.getElementById('continueBtn');
-    if (continueBtn) {
-      continueBtn.addEventListener('click', () => {
-        Navigation.navigateTo('words');
-      });
-    }
-
-    window.addEventListener('pageChange', (e) => {
-      currentPage = e.detail.page;
-      onPageChange(currentPage);
+    // Global keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // ESC to go home
+      if (e.key === 'Escape') {
+        navigateTo('home');
+      }
+      // Space to toggle play (when on words page)
+      if (e.key === ' ' && AppState.get('currentPage') === 'words') {
+        e.preventDefault();
+        if (typeof WordsPage !== 'undefined' && WordsPage.playCurrentWord) {
+          WordsPage.playCurrentWord();
+        }
+      }
     });
 
-    window.addEventListener('languageChange', () => {
-      I18n.translatePage();
-      updateLangToggle();
-      refreshCurrentPage();
-    });
-
+    // Pause speech on visibility change
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
+      if (document.hidden && typeof Speech !== 'undefined') {
         Speech.pause();
       }
     });
 
+    // Prevent double-tap zoom on mobile
     let lastTouchEnd = 0;
     document.addEventListener('touchend', (e) => {
       const now = Date.now();
@@ -2258,74 +3031,63 @@ const App = (function() {
       }
       lastTouchEnd = now;
     }, false);
+
+    // Handle page visibility
+    AppState.on('currentPage', (pageId) => {
+      Storage.updateStreak();
+      updateHeaderStats();
+    });
+  }
+
+  function navigateTo(pageId) {
+    AppState.navigateTo(pageId);
+  }
+
+  function updateLangToggleText() {
+    const langToggle = document.getElementById('langToggle');
+    if (langToggle && typeof I18n !== 'undefined') {
+      const span = langToggle.querySelector('span');
+      if (span) {
+        span.textContent = I18n.getLanguage() === 'zh' ? 'English' : '中文';
+      }
+    }
+  }
+
+  function updateHeaderStats() {
+    const stats = AppState.getStats();
+    const headerStreak = document.getElementById('header-streak');
+    const headerLearned = document.getElementById('header-learned');
+    
+    if (headerStreak) headerStreak.textContent = stats.streak;
+    if (headerLearned) headerLearned.textContent = stats.learnedWords;
   }
 
   function toggleLanguage() {
-    const currentLang = I18n.getLanguage();
-    const newLang = currentLang === 'zh' ? 'en' : 'zh';
-    I18n.setLanguage(newLang);
-    Navigation.setLanguage(newLang === 'en');
-  }
-
-  function updateLangToggle() {
-    const langToggle = document.getElementById('langToggle');
-    if (langToggle) {
+    if (typeof I18n !== 'undefined') {
       const currentLang = I18n.getLanguage();
-      langToggle.querySelector('span').textContent = currentLang === 'zh' ? 'English' : '中文';
+      const newLang = currentLang === 'zh' ? 'en' : 'zh';
+      I18n.setLanguage(newLang);
+      I18n.translatePage();
+      updateLangToggleText();
     }
   }
 
-  function refreshCurrentPage() {
-    switch(currentPage) {
-      case 'words':
-        if (typeof WordsPage !== 'undefined') WordsPage.refresh();
-        break;
-      case 'patterns':
-        if (typeof PatternsPage !== 'undefined') PatternsPage.refresh();
-        break;
-      case 'shadowing':
-        if (typeof ShadowingPage !== 'undefined') ShadowingPage.refresh();
-        break;
-      case 'progress':
-        if (typeof ProgressPage !== 'undefined') ProgressPage.refresh();
-        break;
-    }
-  }
-
-  function onPageChange(page) {
-    localStorage.setItem('linguadrill_last_page', page);
-    
-    switch(page) {
-      case 'words':
-        if (typeof WordsPage !== 'undefined') WordsPage.refresh();
-        break;
-      case 'patterns':
-        if (typeof PatternsPage !== 'undefined') PatternsPage.refresh();
-        break;
-      case 'shadowing':
-        if (typeof ShadowingPage !== 'undefined') ShadowingPage.refresh();
-        break;
-      case 'progress':
-        if (typeof ProgressPage !== 'undefined') ProgressPage.refresh();
-        break;
-    }
-
-    Storage.updateStreak();
-  }
-
-  function getCurrentPage() {
-    return currentPage;
-  }
-
+  // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
 
+  // Public API
   return {
-    getCurrentPage
+    navigateTo,
+    toggleLanguage,
+    refreshCurrentPage: () => AppState.refreshPage(AppState.get('currentPage'))
   };
 })();
+
+// Expose App globally
+window.App = App;
 
 
