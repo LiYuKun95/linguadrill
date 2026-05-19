@@ -1,23 +1,27 @@
 /**
- * Vocabulary Training Module Styles - Compact Mobile First
- * Modern, compact, learning app style
+ * Words Module Styles - Compact Mobile-First
+ * Clean word cards with inline actions
  */
 
-/* Words Page Container */
+/* Words page base */
 .words-page {
-  padding-bottom: 72px;
+  padding-bottom: 0;
 }
 
-/* Toolbar - Compact */
+/* ====================================
+   TOOLBAR - Single compact row
+   ==================================== */
+
 .words-toolbar {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.6rem 0.75rem;
-  background: var(--bg-secondary);
-  border-radius: 16px;
-  margin-bottom: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--bg-color);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
 }
 
 .speed-control {
@@ -28,7 +32,7 @@
 }
 
 .speed-control label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
   white-space: nowrap;
   font-weight: 600;
@@ -36,57 +40,62 @@
 
 #wordSpeedSlider {
   flex: 1;
-  height: 6px;
+  min-width: 60px;
+  height: 5px;
   background: var(--border-color);
-  border-radius: 3px;
+  border-radius: var(--radius-full);
   outline: none;
   -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
 }
 
 #wordSpeedSlider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   background: var(--primary-color);
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 4px rgba(79, 70, 229, 0.3);
 }
 
 #wordSpeedSlider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   background: var(--primary-color);
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 #wordSpeedValue {
   font-weight: 700;
   color: var(--primary-color);
-  min-width: 2.5rem;
+  min-width: 2.2rem;
   text-align: right;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
 
-/* Repeat Mode Button */
+/* Repeat mode button */
 #repeatModeBtn {
-  background: var(--bg-color);
+  background: var(--bg-secondary);
   border: 1.5px solid var(--border-color);
-  padding: 0.4rem 0.75rem;
-  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  border-radius: 12px;
+  border-radius: var(--radius-full);
   cursor: pointer;
   transition: all 0.15s ease;
-  text-align: center;
   white-space: nowrap;
+  font-family: inherit;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #repeatModeBtn:hover {
   border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 #repeatModeBtn.active {
@@ -95,25 +104,48 @@
   color: white;
 }
 
-/* Words List */
+/* ====================================
+   PROGRESS STRIP
+   ==================================== */
+
+.words-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  padding: 0.35rem 0.65rem;
+  background: var(--primary-light);
+  border-radius: var(--radius-md);
+}
+
+.words-progress-text {
+  font-size: 0.72rem;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+/* ====================================
+   WORD CARDS - Compact with learned state
+   ==================================== */
+
 .words-list {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.45rem;
 }
 
-/* Word Card - Compact */
 .word-card {
   background: var(--bg-color);
   border: 1.5px solid var(--border-color);
-  border-radius: 16px;
-  padding: 0.85rem 0.9rem;
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 0.875rem;
   transition: all 0.15s ease;
+  position: relative;
 }
 
 .word-card:hover {
   border-color: var(--primary-color);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
@@ -122,22 +154,44 @@
   background: linear-gradient(135deg, #F0FDF4 0%, var(--bg-color) 100%);
 }
 
-/* Word Header */
+/* Learned badge */
+.word-card.learned::after {
+  content: '✓';
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  width: 16px;
+  height: 16px;
+  background: var(--success-color);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* Word header row */
 .word-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.35rem;
 }
 
 .word-main {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  align-items: baseline;
+  gap: 0.45rem;
+  flex: 1;
+  flex-wrap: wrap;
 }
 
 .word-text {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
@@ -145,80 +199,89 @@
 }
 
 .word-phonetic {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   font-style: italic;
 }
 
-/* Audio Button - Compact */
+/* Audio button */
 .word-audio-btn {
   background: var(--primary-light);
   border: none;
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .word-audio-btn:hover {
   background: var(--primary-color);
-  transform: scale(1.05);
   color: white;
+  transform: scale(1.06);
 }
 
 .word-audio-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.94);
 }
 
-/* Word Content */
+/* Word content */
 .word-translation {
-  font-size: 1rem;
+  font-size: 0.925rem;
   font-weight: 600;
   color: var(--secondary-color);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.25rem;
 }
 
 .word-example {
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   color: var(--text-secondary);
   font-style: italic;
+  line-height: 1.45;
   margin-bottom: 0.15rem;
-  line-height: 1.4;
 }
 
 .word-example-cn {
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   line-height: 1.4;
 }
 
-/* Word Actions - Compact */
+/* Word action row */
 .word-actions {
-  margin-top: 0.55rem;
-  padding-top: 0.55rem;
-  border-top: 1px solid var(--border-color);
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--border-light);
 }
 
 .word-action-btn {
   background: var(--bg-secondary);
   border: 1.5px solid var(--border-color);
-  padding: 0.45rem 1rem;
-  font-size: 0.8rem;
+  padding: 0.35rem 0.875rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s ease;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .word-action-btn:hover {
   border-color: var(--success-color);
+  color: var(--success-color);
+  background: var(--secondary-light);
 }
 
 .word-action-btn.learned {
@@ -227,52 +290,35 @@
   color: white;
 }
 
-/* Progress Indicator */
-.words-progress {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.5rem;
-  padding: 0.45rem 0.6rem;
-  background: var(--primary-light);
-  border-radius: 12px;
-}
+/* ====================================
+   TABLET (768px+)
+   ==================================== */
 
-.words-progress-text {
-  font-size: 0.78rem;
-  color: var(--primary-color);
-  font-weight: 600;
-}
-
-/* Tablet and Desktop */
 @media (min-width: 768px) {
   .words-toolbar {
-    padding: 0.7rem 1rem;
+    padding: 0.65rem 1rem;
     gap: 0.75rem;
   }
 
-  .speed-control {
-    max-width: 280px;
-  }
+  .speed-control { max-width: 260px; }
 
   .words-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.85rem;
+    gap: 0.75rem;
   }
 
-  .word-card {
-    padding: 1rem;
-  }
-
-  .word-text {
-    font-size: 1.4rem;
-  }
+  .word-text { font-size: 1.35rem; }
+  .word-card { padding: 1rem; }
 }
+
+/* ====================================
+   DESKTOP (1024px+)
+   ==================================== */
 
 @media (min-width: 1024px) {
   .words-list {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    gap: 0.875rem;
   }
 }

@@ -19,6 +19,7 @@
   
   
   
+  
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -27,6 +28,16 @@
     <div class="header-brand">
       <span class="brand-icon">📚</span>
       <span class="brand-name">LinguaDrill</span>
+    </div>
+    <div class="header-stats">
+      <div class="stat-pill">
+        <span class="stat-emoji">🔥</span>
+        <span class="stat-value" id="header-streak">0</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-emoji">✅</span>
+        <span class="stat-value" id="header-learned">0</span>
+      </div>
     </div>
     <button class="lang-toggle" id="langToggle" aria-label="切换语言">
       <span>English</span>
@@ -44,8 +55,92 @@
             <span data-i18n="home.title">LinguaDrill</span>
           </h1>
           <p class="hero-subtitle" data-i18n="home.subtitle">高效英语学习引擎</p>
-          <p class="hero-desc" data-i18n="home.description">基于高频词汇、句型操练和跟读训练的沉浸式学习体验</p>
-          <button class="cta-btn" id="startBtn" data-i18n="home.startBtn">开始第一天学习</button>
+          <p class="hero-desc" data-i18n="home.description">基于高频词汇、句型操练和跟读训练</p>
+          <button class="cta-btn" id="startBtn" data-i18n="home.startBtn">开始今天学习</button>
+        </div>
+      </div>
+
+      <!-- Quick Stats Row -->
+      <div class="home-quick-stats">
+        <div class="quick-stat-item">
+          <div class="quick-stat-value" id="homeWordsCount">0</div>
+          <div class="quick-stat-label">已学词汇</div>
+        </div>
+        <div class="quick-stat-item">
+          <div class="quick-stat-value" id="homePatternsCount">0</div>
+          <div class="quick-stat-label">句型练习</div>
+        </div>
+        <div class="quick-stat-item">
+          <div class="quick-stat-value" id="homeShadowingCount">0</div>
+          <div class="quick-stat-label">跟读完成</div>
+        </div>
+      </div>
+
+      <!-- Streak Banner -->
+      <div class="streak-banner" id="streakBanner">
+        <div class="streak-banner-icon">🔥</div>
+        <div class="streak-banner-text">
+          <div class="streak-banner-title">连续学习</div>
+          <div class="streak-banner-sub">Keep it up!</div>
+        </div>
+        <div class="streak-banner-count" id="streakCount">0</div>
+      </div>
+
+      <!-- Learning Modules Grid -->
+      <div class="learning-modules">
+        <h2 class="learning-modules-title" data-i18n="home.modules">📖 学习模块</h2>
+        <div class="modules-grid">
+          <div class="module-card" data-module="words" onclick="navigateTo('words')">
+            <div class="module-header">
+              <span class="module-icon">📚</span>
+              <div class="module-progress" id="wordsProgress"></div>
+            </div>
+            <h3 class="module-title" data-i18n="words.title">高频词汇</h3>
+            <p class="module-desc">学习核心高频词，打好基础</p>
+            <div class="module-stats">
+              <span class="stat-icon">✅</span>
+              <span id="wordsLearned">0/587</span>
+            </div>
+          </div>
+
+          <div class="module-card" data-module="patterns" onclick="navigateTo('patterns')">
+            <div class="module-header">
+              <span class="module-icon">🔄</span>
+              <div class="module-progress" id="patternsProgress"></div>
+            </div>
+            <h3 class="module-title" data-i18n="patterns.title">句型操练</h3>
+            <p class="module-desc">替换练习，掌握核心句式</p>
+            <div class="module-stats">
+              <span class="stat-icon">🎯</span>
+              <span id="patternsCompleted">0</span>
+            </div>
+          </div>
+
+          <div class="module-card" data-module="shadowing" onclick="navigateTo('shadowing')">
+            <div class="module-header">
+              <span class="module-icon">🎤</span>
+              <div class="module-progress" id="shadowingProgress"></div>
+            </div>
+            <h3 class="module-title" data-i18n="shadowing.title">跟读训练</h3>
+            <p class="module-desc">影子跟读法，提升流利度</p>
+            <div class="module-stats">
+              <span class="stat-icon">🔊</span>
+              <span id="shadowingCompleted">0</span>
+            </div>
+          </div>
+
+          <div class="module-card" data-module="progress" onclick="navigateTo('progress')">
+            <div class="module-header">
+              <span class="module-icon">📊</span>
+              <div class="module-progress" id="progressProgress"></div>
+            </div>
+            <h3 class="module-title" data-i18n="progress.title">学习进度</h3>
+            <p class="module-desc">查看你的学习旅程</p>
+            <div class="module-stats">
+              <span class="stat-icon">📈</span>
+              <span id="homeStreakDisplay">0天</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -55,22 +150,18 @@
           <div class="philosophy-card">
             <div class="philosophy-icon">👂</div>
             <h3 data-i18n="home.philosophy.listening">听说优先</h3>
-            <p>在开口说之前，先培养听力理解能力</p>
           </div>
           <div class="philosophy-card">
             <div class="philosophy-icon">🔄</div>
             <h3 data-i18n="home.philosophy.pattern">句型操练</h3>
-            <p>通过模板替换，掌握英语核心句式</p>
           </div>
           <div class="philosophy-card">
             <div class="philosophy-icon">🎤</div>
             <h3 data-i18n="home.philosophy.shadowing">跟读训练</h3>
-            <p>影子跟读法，提升发音和流利度</p>
           </div>
           <div class="philosophy-card">
             <div class="philosophy-icon">📈</div>
             <h3 data-i18n="home.philosophy.gradual">循序渐进</h3>
-            <p>科学规划学习路径，稳步提升</p>
           </div>
         </div>
       </div>
@@ -159,10 +250,22 @@
           <span data-i18n="shadowing.yourTurn">轮到你了！</span>
         </div>
         <div class="shadowing-controls">
-          <button id="shadowingPrevBtn" class="control-btn" data-i18n="shadowing.prev">⬅️ 上一个</button>
-          <button id="shadowingPlayBtn" class="control-btn primary" data-i18n="shadowing.play">🔊 听一遍</button>
-          <button id="shadowingReplayBtn" class="control-btn" data-i18n="shadowing.slow">🐢 慢速</button>
-          <button id="shadowingNextBtn" class="control-btn primary" data-i18n="shadowing.next">下一个 ➡️</button>
+          <button id="shadowingPrevBtn" class="control-btn">
+            <span class="control-btn-icon">⬅️</span>
+            <span data-i18n="shadowing.prev">上一句</span>
+          </button>
+          <button id="shadowingPlayBtn" class="control-btn primary">
+            <span class="control-btn-icon">🔊</span>
+            <span data-i18n="shadowing.play">听一遍</span>
+          </button>
+          <button id="shadowingReplayBtn" class="control-btn">
+            <span class="control-btn-icon">🐢</span>
+            <span data-i18n="shadowing.slow">慢速</span>
+          </button>
+          <button id="shadowingNextBtn" class="control-btn primary">
+            <span class="control-btn-icon">➡️</span>
+            <span data-i18n="shadowing.next">下一句</span>
+          </button>
         </div>
       </div>
 

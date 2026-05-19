@@ -1058,6 +1058,7 @@ const Navigation = (function() {
     renderNavigation();
     setupEventListeners();
     highlightCurrentPage();
+    updateGlobalStats();
   }
 
   function renderNavigation() {
@@ -1108,11 +1109,25 @@ const Navigation = (function() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // Update global stats
+    updateGlobalStats();
+
     // Refresh page content
     refreshPage(pageId);
 
     // Dispatch navigation event
     window.dispatchEvent(new CustomEvent('pageChange', { detail: { page: pageId } }));
+  }
+
+  function updateGlobalStats() {
+    const learnedWords = Storage.getLearnedWords().length;
+    const streak = Storage.getStreak();
+
+    // Update header stats
+    const headerStreak = document.getElementById('header-streak');
+    const headerLearned = document.getElementById('header-learned');
+    if (headerStreak) headerStreak.textContent = streak;
+    if (headerLearned) headerLearned.textContent = learnedWords;
   }
 
   function highlightCurrentPage() {
@@ -1167,15 +1182,53 @@ const HomePage = (function() {
         navigateTo('words');
       });
     }
+    updateStats();
   }
 
   function refresh() {
     init();
   }
 
+  function updateStats() {
+    const learnedWords = Storage.getLearnedWords().length;
+    const streak = Storage.getStreak();
+    const drillsCompleted = Storage.getCompletedDrills().length;
+    const shadowingCompleted = Storage.getShadowingSessions().length;
+
+    // Update header stats
+    const headerStreak = document.getElementById('header-streak');
+    const headerLearned = document.getElementById('header-learned');
+    if (headerStreak) headerStreak.textContent = streak;
+    if (headerLearned) headerLearned.textContent = learnedWords;
+
+    // Update quick stats row
+    const homeWordsCount = document.getElementById('homeWordsCount');
+    const homePatternsCount = document.getElementById('homePatternsCount');
+    const homeShadowingCount = document.getElementById('homeShadowingCount');
+    if (homeWordsCount) homeWordsCount.textContent = learnedWords;
+    if (homePatternsCount) homePatternsCount.textContent = drillsCompleted;
+    if (homeShadowingCount) homeShadowingCount.textContent = shadowingCompleted;
+
+    // Update streak banner
+    const streakCountEl = document.getElementById('streakCount');
+    const homeStreakDisplay = document.getElementById('homeStreakDisplay');
+    if (streakCountEl) streakCountEl.textContent = streak;
+    if (homeStreakDisplay) homeStreakDisplay.textContent = streak + '天';
+
+    // Update module cards
+    const wordsLearned = document.getElementById('wordsLearned');
+    const patternsCompleted = document.getElementById('patternsCompleted');
+    const shadowingComp = document.getElementById('shadowingCompleted');
+
+    if (wordsLearned) wordsLearned.textContent = learnedWords + '/587';
+    if (patternsCompleted) patternsCompleted.textContent = drillsCompleted;
+    if (shadowingComp) shadowingComp.textContent = shadowingCompleted;
+  }
+
   return {
     init: init,
-    refresh: refresh
+    refresh: refresh,
+    updateStats: updateStats
   };
 })();
 
@@ -1356,6 +1409,14 @@ const WordsPage = (function() {
     saveLearnedWords();
     renderWords();
     checkDayCompletion();
+    // Update global stats
+    if (typeof Navigation !== 'undefined' && Navigation.updateGlobalStats) {
+      Navigation.updateGlobalStats();
+    }
+    // Also update home page stats if available
+    if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
+      HomePage.updateStats();
+    }
   }
 
   function checkDayCompletion() {
