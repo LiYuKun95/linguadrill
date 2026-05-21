@@ -39,6 +39,7 @@ const I18n = (function() {
       'patterns.generate': '生成新句子',
       'patterns.play': '播放句子',
       'patterns.autoPlay': '自动播放',
+      'patterns.markPracticed': '已练习',
       'patterns.template': '模板',
       
       // Shadowing Page
@@ -66,7 +67,8 @@ const I18n = (function() {
       'common.cancel': '取消',
       'common.confirm': '确认',
       'common.close': '关闭',
-      'common.day': '天'
+      'common.day': '天',
+      'day': 'Day',
     },
     en: {
       // Navigation
@@ -101,6 +103,7 @@ const I18n = (function() {
       'patterns.generate': 'New Sentence',
       'patterns.play': 'Play',
       'patterns.autoPlay': 'Auto Play',
+      'patterns.markPracticed': 'Practiced',
       'patterns.template': 'Template',
       
       // Shadowing Page
@@ -128,7 +131,8 @@ const I18n = (function() {
       'common.cancel': 'Cancel',
       'common.confirm': 'Confirm',
       'common.close': 'Close',
-      'common.day': 'Day'
+      'common.day': 'Day',
+      'day': 'Day'
     }
   };
 

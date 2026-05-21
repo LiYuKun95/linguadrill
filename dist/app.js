@@ -42,6 +42,7 @@ const I18n = (function() {
       'patterns.generate': '生成新句子',
       'patterns.play': '播放句子',
       'patterns.autoPlay': '自动播放',
+      'patterns.markPracticed': '已练习',
       'patterns.template': '模板',
       
       // Shadowing Page
@@ -69,7 +70,8 @@ const I18n = (function() {
       'common.cancel': '取消',
       'common.confirm': '确认',
       'common.close': '关闭',
-      'common.day': '天'
+      'common.day': '天',
+      'day': 'Day',
     },
     en: {
       // Navigation
@@ -104,6 +106,7 @@ const I18n = (function() {
       'patterns.generate': 'New Sentence',
       'patterns.play': 'Play',
       'patterns.autoPlay': 'Auto Play',
+      'patterns.markPracticed': 'Practiced',
       'patterns.template': 'Template',
       
       // Shadowing Page
@@ -131,7 +134,8 @@ const I18n = (function() {
       'common.cancel': 'Cancel',
       'common.confirm': 'Confirm',
       'common.close': 'Close',
-      'common.day': 'Day'
+      'common.day': 'Day',
+      'day': 'Day'
     }
   };
 
@@ -1033,14 +1037,17 @@ const AppState = (function() {
     const yesterdayStr = yesterday.toISOString().split('T')[0];
 
     if (state.lastDate === todayStr) {
-      // Already updated today
+      // Already updated today — no change
       return;
     } else if (state.lastDate === yesterdayStr) {
-      // Consecutive day
-      state.streak++;
+      // Consecutive day — increment streak
+      state.streak += 1;
+    } else if (state.lastDate === null) {
+      // First ever day
+      state.streak = 1;
     } else {
-      // Streak broken or first day
-      state.streak = Math.max(1, state.streak);
+      // Gap detected — streak broken, restart at 1
+      state.streak = 1;
     }
 
     state.lastDate = todayStr;
@@ -1714,6 +1721,7 @@ const WordsPage = (function() {
   let currentDay = 1;
   let isInitialized = false;
   let currentWordIndex = -1;
+  let searchQuery = '';
 
   /**
    * Initialize the Words page
@@ -1920,6 +1928,15 @@ const WordsPage = (function() {
         updateDayTitle();
       }
     });
+
+    // Search input
+    const searchInput = document.getElementById('wordSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim().toLowerCase();
+        renderWords();
+      });
+    }
   }
 
   /**
@@ -1939,16 +1956,37 @@ const WordsPage = (function() {
       return;
     }
 
-    container.innerHTML = wordsData.map((word, index) => {
+    // Filter by search query
+    let filtered = wordsData;
+    if (searchQuery) {
+      filtered = wordsData.filter(w =>
+        w.word.toLowerCase().includes(searchQuery) ||
+        (w.translation && w.translation.includes(searchQuery)) ||
+        (w.phonetic && w.phonetic.toLowerCase().includes(searchQuery))
+      );
+    }
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <p>没有匹配的词汇</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = filtered.map((word, index) => {
+      const realIndex = wordsData.indexOf(word);
       const isLearned = AppState.isWordLearned(currentDay, word.word);
       return `
-        <div class="word-card ${isLearned ? 'learned' : ''}" data-index="${index}">
+        <div class="word-card ${isLearned ? 'learned' : ''}" data-index="${realIndex}">
           <div class="word-header">
             <div class="word-main">
-              <span class="word-text" onclick="WordsPage.playWord(${index})">${word.word}</span>
+              <span class="word-text" onclick="WordsPage.playWord(${realIndex})">${word.word}</span>
               <span class="word-phonetic">${word.phonetic || ''}</span>
             </div>
-            <button class="word-audio-btn" onclick="WordsPage.playWord(${index})" aria-label="播放发音">
+            <button class="word-audio-btn" onclick="WordsPage.playWord(${realIndex})" aria-label="播放发音">
               🔊
             </button>
           </div>
@@ -1956,7 +1994,7 @@ const WordsPage = (function() {
           <div class="word-example">"${word.example || ''}"</div>
           <div class="word-example-cn">${word.exampleCn || ''}</div>
           <div class="word-actions">
-            <button class="word-action-btn ${isLearned ? 'learned' : ''}" 
+            <button class="word-action-btn ${isLearned ? 'learned' : ''}"
                     onclick="WordsPage.toggleLearned('${word.word.replace(/'/g, "\\'")}')">
               ${isLearned ? '✅ 已学会' : '⭕ 标记为已学'}
             </button>
@@ -1964,6 +2002,14 @@ const WordsPage = (function() {
         </div>
       `;
     }).join('');
+
+    // Show filter result count if searching
+    if (searchQuery) {
+      const countEl = document.createElement('div');
+      countEl.className = 'search-result-count';
+      countEl.textContent = `找到 ${filtered.length} / ${wordsData.length} 个词汇`;
+      container.prepend(countEl);
+    }
   }
 
   /**
@@ -1982,10 +2028,6 @@ const WordsPage = (function() {
     } else {
       Speech.speak(word.word, currentSpeed);
     }
-
-    // Update learning stats
-    AppState.set('wordsLearned', AppState.get('wordsLearned') + 1);
-    Storage.incrementWordsLearned();
   }
 
   /**
@@ -2046,27 +2088,32 @@ const WordsPage = (function() {
   }
 
   /**
-   * Show day completion message
+   * Show day completion message with animation
    */
   function showDayCompletedMessage() {
-    const container = document.getElementById('wordsList');
-    if (container) {
-      const completionMsg = document.createElement('div');
-      completionMsg.className = 'completion-message';
-      completionMsg.innerHTML = `
-        <div class="completion-content">
-          <span class="completion-icon">🎉</span>
-          <h3>太棒了！</h3>
-          <p>Day ${currentDay} 已完成！</p>
-        </div>
-      `;
-      container.prepend(completionMsg);
-      
-      // Remove after 3 seconds
-      setTimeout(() => {
-        completionMsg.remove();
-      }, 3000);
-    }
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'completion-overlay';
+    overlay.innerHTML = `
+      <div class="completion-modal">
+        <div class="completion-icon-animated">🎉</div>
+        <h3 class="completion-title">太棒了！</h3>
+        <p class="completion-subtitle">Day ${currentDay} 已完成！</p>
+        <p class="completion-detail">你已掌握 ${wordsData.length} 个新词汇</p>
+        <button class="completion-btn" onclick="this.closest('.completion-overlay').remove()">
+          继续学习 →
+        </button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      if (overlay.parentNode) {
+        overlay.classList.add('completion-fade-out');
+        setTimeout(() => overlay.remove(), 300);
+      }
+    }, 5000);
   }
 
   /**
@@ -2232,6 +2279,11 @@ const PatternsPage = (function() {
       autoPlayBtn.addEventListener('click', toggleAutoPlay);
     }
 
+    const markPracticedBtn = document.getElementById('markPracticedBtn');
+    if (markPracticedBtn) {
+      markPracticedBtn.addEventListener('click', markPatternPracticed);
+    }
+
     // Listen for week data updates
     AppState.on('weekData', (data) => {
       if (data && data.days) {
@@ -2285,32 +2337,45 @@ const PatternsPage = (function() {
 
     currentSentence = result.sentence;
     currentPattern = result.template;
-    
+
     const sentenceDisplay = document.getElementById('sentenceDisplay');
     const templateDisplay = document.getElementById('templateDisplay');
-    
+
     if (sentenceDisplay) {
       sentenceDisplay.textContent = currentSentence;
       sentenceDisplay.classList.remove('fade-in');
       void sentenceDisplay.offsetWidth;
       sentenceDisplay.classList.add('fade-in');
     }
-    
+
     if (templateDisplay) {
       templateDisplay.textContent = `模板: ${currentPattern}`;
     }
 
-    // Update stats via AppState
+    if (isAutoPlay) {
+      setTimeout(() => playCurrentSentence(), 500);
+    }
+  }
+
+  /**
+   * Mark current pattern as practiced (counts toward progress)
+   */
+  function markPatternPracticed() {
     AppState.incrementPatterns(1);
     Storage.incrementPatternsPracticed();
+
+    // Flash feedback on the generate button
+    const btn = document.getElementById('generateSentenceBtn');
+    if (btn) {
+      btn.textContent = '✅ 已练习';
+      setTimeout(() => {
+        btn.textContent = I18n.t('patterns.generate') || '🔄 生成新句子';
+      }, 1200);
+    }
 
     // Update HomePage if available
     if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
       HomePage.updateStats();
-    }
-
-    if (isAutoPlay) {
-      setTimeout(() => playCurrentSentence(), 500);
     }
   }
 
@@ -2342,7 +2407,8 @@ const PatternsPage = (function() {
     selectPattern,
     selectDay,
     generateNewSentence,
-    playCurrentSentence
+    playCurrentSentence,
+    markPatternPracticed
   };
 })();
 
@@ -2608,16 +2674,14 @@ const ShadowingPage = (function() {
       isPlaying = false;
       renderPlayer();
       markCurrentCompleted();
+      // Count toward progress only when actually completing a shadowing exercise
+      AppState.incrementShadowing(1);
+      Storage.incrementShadowingCompleted();
+      // Update HomePage if available
+      if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
+        HomePage.updateStats();
+      }
     }, duration);
-
-    // Update stats via AppState
-    AppState.incrementShadowing(1);
-    Storage.incrementShadowingCompleted();
-
-    // Update HomePage if available
-    if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
-      HomePage.updateStats();
-    }
   }
 
   function markCurrentCompleted() {
@@ -2703,6 +2767,7 @@ const ProgressPage = (function() {
     updateProgressDisplay();
     renderHistory();
     renderAchievements();
+    setupEventListeners();
     
     // Listen for state changes
     AppState.on('learnedWords', updateProgressDisplay);
@@ -2712,6 +2777,19 @@ const ProgressPage = (function() {
     
     isInitialized = true;
     console.log('✅ ProgressPage initialized');
+  }
+
+  function setupEventListeners() {
+    const resetBtn = document.getElementById('resetProgressBtn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        if (confirm('确定要重置所有学习进度吗？此操作不可撤销。')) {
+          Storage.clearAll();
+          // Reset AppState
+          location.reload();
+        }
+      });
+    }
   }
 
   function updateProgressDisplay() {
@@ -3038,6 +3116,27 @@ const App = (function() {
         e.preventDefault();
         if (typeof WordsPage !== 'undefined' && WordsPage.playCurrentWord) {
           WordsPage.playCurrentWord();
+        }
+      }
+      // Shadowing page keyboard shortcuts
+      if (AppState.get('currentPage') === 'shadowing') {
+        if (e.key === 'ArrowRight' || e.key === 'n') {
+          e.preventDefault();
+          if (typeof ShadowingPage !== 'undefined' && ShadowingPage.nextSentence) {
+            ShadowingPage.nextSentence();
+          }
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'p') {
+          e.preventDefault();
+          if (typeof ShadowingPage !== 'undefined' && ShadowingPage.prevSentence) {
+            ShadowingPage.prevSentence();
+          }
+        }
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          if (typeof ShadowingPage !== 'undefined' && ShadowingPage.playCurrent) {
+            ShadowingPage.playCurrent();
+          }
         }
       }
     });

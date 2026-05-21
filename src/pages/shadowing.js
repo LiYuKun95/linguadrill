@@ -258,16 +258,14 @@ const ShadowingPage = (function() {
       isPlaying = false;
       renderPlayer();
       markCurrentCompleted();
+      // Count toward progress only when actually completing a shadowing exercise
+      AppState.incrementShadowing(1);
+      Storage.incrementShadowingCompleted();
+      // Update HomePage if available
+      if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
+        HomePage.updateStats();
+      }
     }, duration);
-
-    // Update stats via AppState
-    AppState.incrementShadowing(1);
-    Storage.incrementShadowingCompleted();
-
-    // Update HomePage if available
-    if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
-      HomePage.updateStats();
-    }
   }
 
   function markCurrentCompleted() {

@@ -13,6 +13,7 @@ const ProgressPage = (function() {
     updateProgressDisplay();
     renderHistory();
     renderAchievements();
+    setupEventListeners();
     
     // Listen for state changes
     AppState.on('learnedWords', updateProgressDisplay);
@@ -22,6 +23,19 @@ const ProgressPage = (function() {
     
     isInitialized = true;
     console.log('✅ ProgressPage initialized');
+  }
+
+  function setupEventListeners() {
+    const resetBtn = document.getElementById('resetProgressBtn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        if (confirm('确定要重置所有学习进度吗？此操作不可撤销。')) {
+          Storage.clearAll();
+          // Reset AppState
+          location.reload();
+        }
+      });
+    }
   }
 
   function updateProgressDisplay() {

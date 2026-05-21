@@ -239,6 +239,11 @@
   background: var(--primary-light);
 }
 
+.shadowing-item.completed {
+  border-color: var(--success-color);
+  background: linear-gradient(135deg, #F0FDF4 0%, var(--bg-color) 100%);
+}
+
 .shadowing-number {
   width: 24px;
   height: 24px;

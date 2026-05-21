@@ -229,6 +229,9 @@
       </div>
       
       <div class="words-toolbar">
+        <div class="words-search">
+          <input type="text" id="wordSearchInput" placeholder="🔍 搜索词汇..." aria-label="搜索词汇">
+        </div>
         <div class="speed-control">
           <label for="wordSpeedSlider" data-i18n="words.speed">语速</label>
           <input type="range" id="wordSpeedSlider" min="0.5" max="2" step="0.1" value="1">
@@ -255,6 +258,7 @@
         <div class="toolbar-row">
           <button id="generateSentenceBtn" class="toolbar-btn" data-i18n="patterns.generate">🔄 生成新句子</button>
           <button id="playSentenceBtn" class="toolbar-btn secondary" data-i18n="patterns.play">🔊 播放</button>
+          <button id="markPracticedBtn" class="toolbar-btn secondary" data-i18n="patterns.markPracticed">✅ 已练习</button>
           <button id="autoPlayBtn" class="toolbar-btn secondary" data-i18n="patterns.autoPlay">🔊 自动播放: 关</button>
         </div>
         <div class="speed-control">
@@ -395,6 +399,10 @@
           <h3 class="section-title" data-i18n="progress.achievements">成就</h3>
         </div>
         <div id="achievementsList" class="achievements-list"></div>
+      </div>
+
+      <div class="reset-section">
+        <button class="reset-btn" id="resetProgressBtn">🗑️ 重置所有进度</button>
       </div>
     </section>
   </main>

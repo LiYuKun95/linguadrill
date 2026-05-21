@@ -130,6 +130,11 @@ const PatternsPage = (function() {
       autoPlayBtn.addEventListener('click', toggleAutoPlay);
     }
 
+    const markPracticedBtn = document.getElementById('markPracticedBtn');
+    if (markPracticedBtn) {
+      markPracticedBtn.addEventListener('click', markPatternPracticed);
+    }
+
     // Listen for week data updates
     AppState.on('weekData', (data) => {
       if (data && data.days) {
@@ -183,32 +188,45 @@ const PatternsPage = (function() {
 
     currentSentence = result.sentence;
     currentPattern = result.template;
-    
+
     const sentenceDisplay = document.getElementById('sentenceDisplay');
     const templateDisplay = document.getElementById('templateDisplay');
-    
+
     if (sentenceDisplay) {
       sentenceDisplay.textContent = currentSentence;
       sentenceDisplay.classList.remove('fade-in');
       void sentenceDisplay.offsetWidth;
       sentenceDisplay.classList.add('fade-in');
     }
-    
+
     if (templateDisplay) {
       templateDisplay.textContent = `模板: ${currentPattern}`;
     }
 
-    // Update stats via AppState
+    if (isAutoPlay) {
+      setTimeout(() => playCurrentSentence(), 500);
+    }
+  }
+
+  /**
+   * Mark current pattern as practiced (counts toward progress)
+   */
+  function markPatternPracticed() {
     AppState.incrementPatterns(1);
     Storage.incrementPatternsPracticed();
+
+    // Flash feedback on the generate button
+    const btn = document.getElementById('generateSentenceBtn');
+    if (btn) {
+      btn.textContent = '✅ 已练习';
+      setTimeout(() => {
+        btn.textContent = I18n.t('patterns.generate') || '🔄 生成新句子';
+      }, 1200);
+    }
 
     // Update HomePage if available
     if (typeof HomePage !== 'undefined' && HomePage.updateStats) {
       HomePage.updateStats();
-    }
-
-    if (isAutoPlay) {
-      setTimeout(() => playCurrentSentence(), 500);
     }
   }
 
@@ -240,6 +258,7 @@ const PatternsPage = (function() {
     selectPattern,
     selectDay,
     generateNewSentence,
-    playCurrentSentence
+    playCurrentSentence,
+    markPatternPracticed
   };
 })();

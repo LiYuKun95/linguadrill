@@ -121,6 +121,27 @@ const App = (function() {
           WordsPage.playCurrentWord();
         }
       }
+      // Shadowing page keyboard shortcuts
+      if (AppState.get('currentPage') === 'shadowing') {
+        if (e.key === 'ArrowRight' || e.key === 'n') {
+          e.preventDefault();
+          if (typeof ShadowingPage !== 'undefined' && ShadowingPage.nextSentence) {
+            ShadowingPage.nextSentence();
+          }
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'p') {
+          e.preventDefault();
+          if (typeof ShadowingPage !== 'undefined' && ShadowingPage.prevSentence) {
+            ShadowingPage.prevSentence();
+          }
+        }
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          if (typeof ShadowingPage !== 'undefined' && ShadowingPage.playCurrent) {
+            ShadowingPage.playCurrent();
+          }
+        }
+      }
     });
 
     // Pause speech on visibility change

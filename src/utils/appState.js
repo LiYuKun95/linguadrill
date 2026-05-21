@@ -125,14 +125,17 @@ const AppState = (function() {
     const yesterdayStr = yesterday.toISOString().split('T')[0];
 
     if (state.lastDate === todayStr) {
-      // Already updated today
+      // Already updated today — no change
       return;
     } else if (state.lastDate === yesterdayStr) {
-      // Consecutive day
-      state.streak++;
+      // Consecutive day — increment streak
+      state.streak += 1;
+    } else if (state.lastDate === null) {
+      // First ever day
+      state.streak = 1;
     } else {
-      // Streak broken or first day
-      state.streak = Math.max(1, state.streak);
+      // Gap detected — streak broken, restart at 1
+      state.streak = 1;
     }
 
     state.lastDate = todayStr;
